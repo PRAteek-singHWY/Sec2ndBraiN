@@ -1,0 +1,48 @@
+
+sign up 
+once we sign up 
+then i see importatnt links which i can simply put it her , or i see a thumbanial or anything which i need to remeber later the. A web app named SECOND BRAIN 
+tehn i can can come on thsi web app and 
+we cans hare our batrin withother people
+so people can see taht ewhat i am currently ineterested in like what i am saving for laster that is important (what )
+
+people need to be able to query 
+like find a tweet with details from it's link
+like instead of scrolling and searching fro a link i could just ask teh ai assisatnt o look in my saved notes or audio or videos  tags tweets and look for "let's say atweet with this this content"
+
+
+
+step-1 ➡️ npm init -y creating a package.json file.
+💚
+step-2 ➡️ Install Dependencies for the Backend
+You'll need a bunch of dependencies for the backend:
+
+npm install express mongoose dotenv cors
+npm install --save-dev typescript @types/node @types/express ts-node
+express: The core web framework.
+
+mongoose: To interact with MongoDB.
+
+dotenv: To manage environment variables.
+
+cors: For enabling cross-origin requests (if you plan to communicate between frontend and backend).
+
+typescript: The TypeScript compiler.
+
+@types: Type definitions for Node.js and Express.
+
+ts-node: A utility to run TypeScript code directly.
+💚
+step-3 ➡️ npx tsc --init create a tsconfig.json
+💚
+step-4 "outDir": "./dist",
+    /* Specify an output folder for all emitted files. */
+    "rootDir": "./src",
+    /* Specify the root folder within your source files. */ // "removeComments": 
+💚
+step-5
+creating and setting_up basic files and folders
+src/index.ts: The entry point for your backend app.
+
+
+
