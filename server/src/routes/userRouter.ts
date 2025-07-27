@@ -7,6 +7,7 @@ import {
   userDeleteContent,
   userGetContent,
   userShareContent,
+  userUpdateContent,
 } from "../controllers/contentController";
 const userRouter = Router();
 
@@ -24,6 +25,9 @@ userRouter.get("/content", userMiddleware, userGetContent);
 
 // Delete a document
 userRouter.delete("/content", userMiddleware, userDeleteContent);
+
+// update a document
+userRouter.put("/content", userMiddleware, userUpdateContent);
 
 // Create a shareable link for your second brain
 userRouter.post("/brain/share", userMiddleware, userShareContent);

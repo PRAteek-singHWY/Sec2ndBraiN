@@ -54,7 +54,7 @@ export const userSignUp = async (
   }
 
   const { username, password } = parsed.data;
-
+  console.log(parsed.data);
   try {
     const existingUser = await User.findOne({ username });
     if (existingUser) {
@@ -80,6 +80,7 @@ export const userSignUp = async (
       token,
     });
   } catch (error) {
+    console.error("Error in signup:", error); // <== Add this line
     return res.status(500).json({ message: "Server error" });
   }
 };

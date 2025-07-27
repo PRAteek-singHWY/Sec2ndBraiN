@@ -1,8 +1,9 @@
 import { Content } from "../models/db";
 import { Request, Response } from "express";
-import { z } from "zod";
+import { trim, z } from "zod";
 
-import { nanoid } from "nanoid"; // to generate unique links
+import { nanoid } from "nanoid";
+// to generate unique links
 import { error } from "console";
 
 // ADD CONTENT
@@ -116,6 +117,60 @@ export const userDeleteContent = async (
     return res.status(500).json({ error: "Failed to delete content" });
   }
 };
+// UPDATE CONTENT
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+// schema for validating update
+const contentUpdateSchema = z.object({
+  contentId: z.string().min(1),
+  title: z.string().min(1).optional(),
+  body: z.string().min(1).optional(),
+});
+export const userUpdateContent = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  const parsed = contentUpdateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.format() });
+  }
+  const { contentId, title, body } = parsed.data;
+  const userId = req.userId;
+  try {
+    const content = await Content.findOne({
+      _id: contentId,
+      userId: userId,
+    });
+    if (!content) {
+      return res.status(404).json({ error: "Content not found" });
+    }
+    // update content
+    if (title !== undefined) content.title = title;
+    if (body !== undefined) content.body = body;
+    // saving updates to database
+    await content.save();
+    return res.status(200).json({
+      message: "Content Updated Successfully",
+      updateContent: content,
+    });
+  } catch (error) {
+    console.log("Error updating content:", error);
+    return res.status(500).json({ error: "Internal Server error" });
+  }
+};
+
 // CREATE SHAREABLE LINK FOR CONTENT
 //
 //
@@ -173,6 +228,8 @@ export const userShareContent = async (
 //
 //
 export const userAccessSharedContent = async (req: Request, res: Response) => {
+  console.log("Share link:", req.params.shareLink);
+
   try {
     const content = await Content.findOne({
       shareLink: req.params.shareLink,
