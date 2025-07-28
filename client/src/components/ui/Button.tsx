@@ -9,7 +9,7 @@ export interface ButtonProps {
   text: string;
   startIcon?: ReactElement;
   endIcon?: ReactElement;
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 // now this object will have keys of type varianst with values as strings

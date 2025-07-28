@@ -11,15 +11,14 @@ function App() {
         text="Add Content"
         size="md"
         startIcon={<PlusIcon size="lg" />}
-        //   endIcopn={<>+</>}
+        endIcon={<ShareIcon size="lg" />}
       />
       <Button
         variant="secondary"
         text="Share"
         size="md"
         startIcon={<ShareIcon size="lg" />}
-        //   startIcon={<>-</>}
-        //   endIcopn={<>+</>}
+        endIcon={<PlusIcon size="lg" />}
       />
     </>
   );
