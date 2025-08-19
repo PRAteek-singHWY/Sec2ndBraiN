@@ -1,5 +1,9 @@
 import express, { Router } from "express";
-import { userSignIn, userSignUp } from "../controllers/userController";
+import {
+  googleSignIn,
+  userSignIn,
+  userSignUp,
+} from "../controllers/userController";
 import { userMiddleware } from "../middleware/userMiddleware";
 import {
   userAccessSharedContent,
@@ -10,6 +14,13 @@ import {
   userUpdateContent,
 } from "../controllers/contentController";
 const userRouter = Router();
+// in userRouter.ts
+userRouter.get("/verify-token", userMiddleware, (req, res) => {
+  return res.status(200).json({ loggedIn: true });
+});
+
+// Google Sign-in
+userRouter.post("/google-signin", googleSignIn);
 
 // user-SignIn
 userRouter.post("/signin", userSignIn);
