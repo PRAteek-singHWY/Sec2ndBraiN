@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PlusIcon } from "../assets/icons/PlusIcon";
 import { ShareIcon } from "../assets/icons/ShareIcon";
 import { Button } from "../components/Button";
@@ -8,17 +8,56 @@ import { SideBar } from "../components/SideBar";
 import { Logo } from "../assets/icons/Logo"; // Import your Logo here
 import { HamIcon } from "../assets/icons/HamIcon";
 import { useNavigate } from "react-router-dom";
+import { getContents, addContent, NewContentPayload } from "../api/content";
+import { userShareProfile } from "../api/content"; // add API
+
+// genric type for contents line 28
+type ContentDoc = {
+  _id: string;
+  title: string;
+  link: string; // link comes back as body
+  type: string;
+  tags: { _id: string; tagTitle: string }[];
+  note?: string;
+};
 
 function Dashboard() {
   const navigate = useNavigate();
-
   const [modalOpen, setModalOpen] = useState(false);
   const [sideBar, setSideBarOpen] = useState(false);
-
   // Store all user-added contents
-  const [contents, setContents] = useState<
-    { title: string; link: string; tags: string[] }[]
-  >([]);
+  const [contents, setContents] = useState<ContentDoc[]>([]);
+  const [filter, setFilter] = useState<"all" | "youtube" | "twitter" | "notes">(
+    "all"
+  );
+
+  const handleShareProfile = async () => {
+    try {
+      const res = await userShareProfile();
+      navigator.clipboard.writeText(res.profileShareLink);
+      alert("Profile link copied!");
+    } catch {
+      alert("Could not generate profile link");
+    }
+  };
+  // fetch on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const list = await getContents();
+        setContents(list);
+        // console.log(list); // Check if note is present
+      } catch (e) {
+        console.error("Fetch contents failed", e);
+      }
+    })();
+  }, []);
+
+  // filter logic
+  const filteredContents = contents.filter((c) => {
+    if (filter === "all") return true;
+    return c.type.toLowerCase() === filter; // assumes c.type = "youtube" | "twitter" | "notes"
+  });
 
   return (
     <div className="min-h-screen bg-purple-50 flex flex-col">
@@ -52,6 +91,7 @@ function Dashboard() {
             text="Share"
             size="md"
             startIcon={<ShareIcon size="md" />}
+            onClick={handleShareProfile}
           />
         </div>
       </header>
@@ -72,21 +112,26 @@ function Dashboard() {
 
       {/* Main content */}
       <div className="flex gap-6 p-6 ml-1.5">
-        <Card
-          type="twitter"
-          title="BlockCHain"
-          link="https://x.com/blockchain/status/1880310548396687562"
-        />
-        <Card
-          type="youtube"
-          title="Solana"
-          link="https://www.youtube.com/watch?v=5X1uwNJkZFw"
-        />
-
-        {/* Add more Cards here in production different for each user */}
-
-        {contents.map((c, i) => (
-          <Card type />
+        {filteredContents.map((c) => (
+          <Card
+            key={c._id}
+            contentId={c._id}
+            title={c.title}
+            link={c.link}
+            type={c.type}
+            tags={c.tags?.map((t) => t.tagTitle)}
+            note={c.note} // pass the note here
+            onDeleteLocal={(id) =>
+              setContents((prev) => prev.filter((item) => item._id !== id))
+            }
+            onUpdateLocal={(id, updated) =>
+              setContents((prev) =>
+                prev.map((item) =>
+                  item._id === id ? { ...item, ...updated } : item
+                )
+              )
+            }
+          />
         ))}
       </div>
 
@@ -95,16 +140,25 @@ function Dashboard() {
         <CreateContentModal
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
-          onSubmit={(data) => {
-            // This runs when user clicks Submit inside modal
-            setContents((prev) => [...prev, data]);
+          onSubmit={async (data: NewContentPayload) => {
+            try {
+              console.log(data);
+              const created = await addContent(data);
+              setContents((prev) => [...prev, created]);
+            } catch (err) {
+              console.error("Error adding content", err);
+            } 
           }}
         />
       )}
 
       {/* Sidebar */}
       {sideBar && (
-        <SideBar isOpen={sideBar} onClose={() => setSideBarOpen(false)} />
+        <SideBar
+          isOpen={sideBar}
+          onClose={() => setSideBarOpen(false)}
+          setFilter={setFilter}
+        />
       )}
     </div>
   );

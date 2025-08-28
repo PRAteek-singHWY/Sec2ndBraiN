@@ -24,13 +24,23 @@ const userSchema = new mongoose.Schema({
   },
   // profile info (from Google or you can collect later)
   name: { type: String },
-  profilePic: { type: String },
+  profilePic: { type: String, default: null }, // store URL only
+
+  phone: Number,
+  bio: String,
+
+  // New fields for profile sharing
+  profileShareLink: { type: String, unique: true, sparse: true },
+  isProfileSharingEnabled: { type: Boolean, default: false },
 });
 
 const contentSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   title: { type: String, required: true },
-  body: { type: String, required: true },
+  link: { type: String, required: false },
+  type: { type: String, required: true }, // ✅ plain string (no enum)
+  note: { type: String, required: false },
+
   createdAt: { type: Date, default: Date.now },
   tags: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tag" }],
   shareLink: { type: String, unique: true, sparse: true },

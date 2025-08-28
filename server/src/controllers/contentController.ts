@@ -1,4 +1,5 @@
-import { Content, Tag } from "../models/db";
+import { Content, Tag, User } from "../models/db";
+import mongoose from "mongoose";
 
 import { Request, Response } from "express";
 import { trim, z } from "zod";
@@ -6,6 +7,8 @@ import { trim, z } from "zod";
 import { nanoid } from "nanoid";
 // to generate unique links
 import { error } from "console";
+import { type } from "os";
+import { link } from "fs";
 
 // ADD CONTENT
 //
@@ -26,11 +29,23 @@ interface AuthenticatedRequest extends Request {
   userId?: string;
 }
 
-const contentSchema = z.object({
-  title: z.string().min(1),
-  body: z.string().min(1),
-  tags: z.array(z.string()).optional(),
-});
+const contentSchema = z
+  .object({
+    title: z.string().min(1),
+    link: z.string().url("Must be a valid URL").optional(),
+    type: z.enum(["youtube", "twitter", "other", "notes"]),
+    tags: z.array(z.string()).optional(),
+    note: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.type === "notes") {
+        return !data.link; // notes should not have link
+      }
+      return true;
+    },
+    { message: "Notes should not contain a link" }
+  );
 
 // it's because you're using the default Express Request type, which doesn't know about your custom userId added in the middleware.
 export const userAddContent = async (
@@ -41,10 +56,10 @@ export const userAddContent = async (
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.format() });
   }
-  const { tags = [] } = parsed.data; 
+  const { tags = [] } = parsed.data;
 
   try {
-    const tagIds = [];
+    const tagIds: mongoose.Types.ObjectId[] = [];
     for (const tagTitle of tags) {
       // checking to find existing tag
       let tag = await Tag.findOne({ tagTitle });
@@ -54,18 +69,25 @@ export const userAddContent = async (
         tag = await Tag.create({ tagTitle });
       }
       // push anyways
-      tagIds.push(tag);
+      tagIds.push(tag._id);
     }
+
     const content = await Content.create({
-      // middleware gets userId after jwt verification
       userId: req.userId,
       title: parsed.data.title,
-      body: parsed.data.body,
+      link: parsed.data.link,
+      type: parsed.data.type,
       tags: tagIds,
+      note: parsed.data.note,
     });
+
+    // return the created doc populated so frontend can show tags immediately
+    const populated = await Content.findById(content._id).populate("tags");
+
     return res.json({
       message: "Content created",
       contentId: content._id,
+      populated,
     });
   } catch (err) {
     console.error("Error creating content:", err);
@@ -159,7 +181,7 @@ export const userDeleteContent = async (
 const contentUpdateSchema = z.object({
   contentId: z.string().min(1),
   title: z.string().min(1).optional(),
-  body: z.string().min(1).optional(),
+  link: z.string().min(1).optional(),
 });
 export const userUpdateContent = async (
   req: AuthenticatedRequest,
@@ -169,7 +191,7 @@ export const userUpdateContent = async (
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.format() });
   }
-  const { contentId, title, body } = parsed.data;
+  const { contentId, title, link } = parsed.data;
   const userId = req.userId;
   try {
     const content = await Content.findOne({
@@ -181,7 +203,7 @@ export const userUpdateContent = async (
     }
     // update content
     if (title !== undefined) content.title = title;
-    if (body !== undefined) content.body = body;
+    if (link !== undefined) content.link = link;
     // saving updates to database
     await content.save();
     return res.status(200).json({
@@ -213,27 +235,21 @@ export const userShareContent = async (
   req: AuthenticatedRequest,
   res: Response
 ) => {
-  const { contentId } = req.body;
-  const userId = req.userId;
-  if (!contentId)
-    return res.status(400).json({ error: "Content ID is required" });
-
   try {
-    const content = await Content.findOne({
-      _id: contentId,
-      userId: userId,
-    });
-    if (!content) {
-      return res.status(404).json({ error: "Content not found" });
-    }
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-    const shareLink = nanoid(10);
-    content.shareLink = shareLink;
-    // content.isSharingEnabled = true;
-    await content.save();
-    return res.status(200).json({ shareLink });
+    const shareLink = nanoid(12); // generate unique short id
+    user.profileShareLink = shareLink;
+    user.isProfileSharingEnabled = true;
+    await user.save();
+
+    return res.status(200).json({
+      message: "Profile sharing enabled",
+      profileShareLink: `${process.env.CLIENT_URL}/profile/${shareLink}`,
+    });
   } catch {
-    return res.status(500).json({ error: "Could not genearte shareable link" });
+    return res.status(500).json({ error: "Could not enable profile sharing" });
   }
 };
 // ACCESS CONTENT USING THE SHAREABLE LINK CREATED
@@ -251,28 +267,66 @@ export const userShareContent = async (
 //
 //
 //
-export const userAccessSharedContent = async (req: Request, res: Response) => {
-  const { shareable } = req.body;
+export const userRevokeProfileShare = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-  console.log("Share link:", req.params.shareLink);
+    user.isProfileSharingEnabled = false;
+    user.profileShareLink = null;
+    await user.save();
+
+    return res.status(200).json({ message: "Profile sharing disabled" });
+  } catch {
+    return res.status(500).json({ error: "Could not disable profile sharing" });
+  }
+};
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+export const userAccessSharedContent = async (req: Request, res: Response) => {
+  const { shareLink } = req.params;
 
   try {
-    const content = await Content.findOne({
-      shareLink: req.params.shareLink,
+    const user = await User.findOne({
+      profileShareLink: shareLink,
+      isProfileSharingEnabled: true,
     });
 
-    if (!content) {
-      return res.status(200).json({ error: " Shared Content not found" });
-    }
-    content.isSharingEnabled = shareable;
-    if (!content.isSharingEnabled) {
-      content.shareLink = "";
-      await content.save();
+    if (!user)
+      return res
+        .status(404)
+        .json({ error: "Profile not found or sharing disabled" });
 
-      return res.status(403).json({ error: "Link has been removed" });
-    }
-    return res.status(200).json({ content });
+    // fetch all contents of that user (read-only)
+    const contents = await Content.find({ userId: user._id }).populate("tags");
+
+    return res.status(200).json({
+      profile: {
+        name: user.name,
+        bio: user.bio,
+        profilePic: user.profilePic,
+        username: user.username,
+      },
+      contents,
+    });
   } catch {
-    return res.status(500).json({ error: "Could not fetch shared Content" });
+    return res.status(500).json({ error: "Could not fetch shared profile" });
   }
 };

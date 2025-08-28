@@ -70,13 +70,22 @@ export const Signup = () => {
                     idToken: cred.credential,
                   }
                 );
-                login(res.data.token, res.data.user);
+
+                const { token, user } = res.data;
+
+                if (!token || !user) {
+                  alert("Google sign-in failed: Invalid response");
+                  return;
+                }
+                console.log("GOOGLE LOGIN RESPONSE:", res.data);
+
+                login(token, user); // ✅ use backend's user directly
                 navigate("/dashboard");
               } catch (e: any) {
-                alert(e.response?.data?.message || "Google sign-up failed");
+                alert(e.response?.data?.message || "Google sign-in failed");
               }
             }}
-            onError={() => alert("Google sign-up failed")}
+            onError={() => alert("Google sign-in failed")}
           />
         </div>
       </div>

@@ -1,17 +1,13 @@
-import { useRef, useEffect, useReducer } from "react";
+import { useRef, useEffect, useState } from "react";
 import { CrossIcon } from "../assets/icons/CrossIcon";
 import { Button } from "./Button";
 import { Input } from "../components/Input";
+import { NewContentPayload } from "../api/content";
 
 interface CreateContentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit?: (data: {
-    title: string;
-    link: string;
-    tags: string[];
-    type: string;
-  }) => void;
+  onSubmit?: (data: NewContentPayload) => void | Promise<void>;
 }
 
 export const CreateContentModal = ({
@@ -24,6 +20,10 @@ export const CreateContentModal = ({
   const tagsRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const typeRef = useRef<HTMLSelectElement>(null);
+  const noteRef = useRef<HTMLTextAreaElement>(null);
+
+  const [type, setType] = useState<string>(""); // NEW: track selected type
+
   // Close modal when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -34,12 +34,8 @@ export const CreateContentModal = ({
         onClose();
       }
     };
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    if (isOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -48,22 +44,57 @@ export const CreateContentModal = ({
     const title = titleRef.current?.value?.trim() || "";
     const link = linkRef.current?.value?.trim() || "";
     const tagsValue = tagsRef.current?.value || "";
-    const type = typeRef.current?.value || "";
+    const note = noteRef.current?.value?.trim() || "";
+
+    // Validation
+    if (!title || !type || (type !== "notes" && !link)) {
+      alert(
+        type === "notes"
+          ? "Please enter title and select a Link Type."
+          : "Please enter title, link and select a Link Type."
+      );
+      return;
+    }
+
     const tagsArray = tagsValue
       .split(",")
       .map((tag) => tag.trim())
       .filter(Boolean);
+    const selectedType = type.toLowerCase();
+    onSubmit?.({ title, link, tags: tagsArray, type: selectedType, note });
 
-    if (onSubmit) {
-      onSubmit({ title, link, tags: tagsArray, type });
+    onSubmit?.({ title, link, tags: tagsArray, type, note }); // include note
+
+    // Validation: link is optional only for notes
+    if (!title || !type || (type !== "notes" && !link)) {
+      alert(
+        type === "notes"
+          ? "Please enter title and select a Link Type."
+          : "Please enter title, link and select a Link Type."
+      );
+      return;
     }
 
-    // Optional: clear inputs after submit
+    const payload: NewContentPayload = {
+      title,
+      tags: tagsArray,
+      type,
+      note,
+    };
+
+    if (type !== "notes") {
+      payload.link = link;
+    }
+
+    onSubmit?.(payload);
+
+    // Clear inputs after submit
     if (titleRef.current) titleRef.current.value = "";
     if (linkRef.current) linkRef.current.value = "";
     if (tagsRef.current) tagsRef.current.value = "";
-    if (typeRef.current) typeRef.current.value = "other";
+    if (typeRef.current) typeRef.current.value = "";
 
+    setType(""); // reset type
     onClose();
   };
 
@@ -84,21 +115,30 @@ export const CreateContentModal = ({
         </div>
 
         <Input placeholder="Title" ref={titleRef} />
-        <Input placeholder="Link" ref={linkRef} />
+        {type !== "notes" && <Input placeholder="Link" ref={linkRef} />}
+
         <select
           ref={typeRef}
-          className=" border-gray-300 border-1 rounded px-2 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-purple-400 ml-2"
-          defaultValue=""
+          className="border-gray-300 border-1 rounded px-2 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-purple-400 ml-2 text-gray-500"
+          value={type}
+          onChange={(e) => setType(e.target.value)}
         >
           <option value="" disabled>
             Link Type
           </option>
-          <option value="youtube">YouTube</option>
-          <option value="twitter">Twitter</option>
-          <option value="other">Other</option>
+          <option value="youtube">youtube</option>
+          <option value="twitter">twitter</option>
+          <option value="notes">notes</option>
         </select>
+        {type === "notes" && (
+          <textarea
+            ref={noteRef}
+            placeholder="Make your note"
+            className="border-gray-300 border rounded px-2 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full"
+          />
+        )}
 
-        <Input placeholder="Tags(comma separated)" ref={tagsRef} />
+        <Input placeholder="Tags (comma separated)" ref={tagsRef} />
 
         {/* Submit button */}
         <div className="flex justify-center">

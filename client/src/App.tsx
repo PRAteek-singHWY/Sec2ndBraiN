@@ -25,6 +25,7 @@ const App = () => {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/profile"
         element={
@@ -33,7 +34,7 @@ const App = () => {
           </ProtectedRoute>
         }
       />
-      <Route
+      {/* <Route
         path="/youtube"
         element={
           <ProtectedRoute>
@@ -48,7 +49,7 @@ const App = () => {
             <TwitterLinks />
           </ProtectedRoute>
         }
-      />
+      /> */}
 
       {/* Catch-all: redirect unknown routes to dashboard */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

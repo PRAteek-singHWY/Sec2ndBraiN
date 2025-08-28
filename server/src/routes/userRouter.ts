@@ -1,8 +1,11 @@
 import express, { Router } from "express";
+import multer from "multer"; // ✅ add multer import
 import {
   googleSignIn,
+  updateUser,
   userSignIn,
   userSignUp,
+  verifyToken,
 } from "../controllers/userController";
 import { userMiddleware } from "../middleware/userMiddleware";
 import {
@@ -10,14 +13,20 @@ import {
   userAddContent,
   userDeleteContent,
   userGetContent,
+  userRevokeProfileShare,
   userShareContent,
   userUpdateContent,
 } from "../controllers/contentController";
+
 const userRouter = Router();
+
+// ✅ multer setup for memory storage
+const upload = multer({ storage: multer.memoryStorage() });
+
+// token-Verification
+userRouter.get("/verify-token", userMiddleware, verifyToken);
+
 // in userRouter.ts
-userRouter.get("/verify-token", userMiddleware, (req, res) => {
-  return res.status(200).json({ loggedIn: true });
-});
 
 // Google Sign-in
 userRouter.post("/google-signin", googleSignIn);
@@ -45,5 +54,17 @@ userRouter.post("/brain/share", userMiddleware, userShareContent);
 
 // Fetch another user's shared brain content
 userRouter.get("/brain/:shareLink", userAccessSharedContent);
+
+// Revoke shareable link's access (make it unshareable)
+userRouter.post("/profile/revoke", userMiddleware, userRevokeProfileShare);
+
+// Updating User PROFILE
+// ✅ added multer middleware to handle profilePic file
+userRouter.put(
+  "/update-profile",
+  userMiddleware,
+  upload.single("profilePic"),
+  updateUser
+);
 
 export default userRouter;

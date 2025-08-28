@@ -4,11 +4,39 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { User } from "../models/db";
 import dotenv from "dotenv";
+import multer from "multer";
 import { OAuth2Client } from "google-auth-library";
+const upload = multer({ storage: multer.memoryStorage() });
+import mongoose from "mongoose";
 
 dotenv.config();
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+export const verifyToken = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const user = await User.findById(req.userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({ user });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 // -------- Local Sign Up --------
 const userSignupSchema = z.object({
@@ -25,7 +53,10 @@ const userSignupSchema = z.object({
     .regex(/[0-9]/, { message: "Must include a number" })
     .regex(/[^A-Za-z0-9]/, { message: "Must include a special character" }),
 });
-
+interface AuthenticatedRequest extends Request {
+  userId?: string;
+  file?: Express.Multer.File;
+}
 type userSignUpType = z.infer<typeof userSignupSchema>;
 
 export const userSignUp = async (
@@ -137,6 +168,7 @@ export const userSignIn = async (
 };
 
 // -------- Google Sign In --------
+// -------- Google Sign In --------
 export const googleSignIn = async (req: Request, res: Response) => {
   const idToken = req.body.idToken as string;
   if (!idToken) return res.status(400).json({ message: "idToken missing" });
@@ -150,23 +182,28 @@ export const googleSignIn = async (req: Request, res: Response) => {
 
     const email = payload?.email?.toLowerCase();
     const name = payload?.name || "";
-    const picture = payload?.picture || "";
+    const picture = payload?.picture; // ✅ capture Google photo
 
     if (!email) return res.status(400).json({ message: "No email found" });
 
     let user = await User.findOne({ email });
     if (!user) {
+      // ✅ New Google user
       user = await User.create({
         email,
-        username: email, // use email as username for Google users
+        username: email,
         name,
-        profilePic: picture,
-        // password omitted (google-only account)
+        profilePic: picture || null, // save google photo if available
       });
     } else {
-      // keep profile fresh
-      user.name = user.name || name;
-      user.profilePic = user.profilePic || picture;
+      // ✅ Existing user
+      if (!user.name) user.name = name;
+
+      // If user never uploaded custom pic, refresh with Google’s
+      if (!user.profilePic && picture) {
+        user.profilePic = picture;
+      }
+
       await user.save();
     }
 
@@ -182,11 +219,33 @@ export const googleSignIn = async (req: Request, res: Response) => {
         username: user.username,
         email: user.email ?? null,
         name: user.name ?? null,
-        profilePic: user.profilePic ?? null,
+        profilePic: user.profilePic,
       },
     });
   } catch (err) {
     console.error("Google sign-in error:", err);
     return res.status(401).json({ message: "Invalid Google token" });
+  }
+};
+
+export const updateUser = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.userId;
+    const { name, phone, bio } = req.body;
+
+    const updateData: any = { name, phone, bio };
+
+    // Remove any profilePic logic completely
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+      new: true,
+    }).select("-password");
+
+    if (!updatedUser)
+      return res.status(404).json({ message: "User not found" });
+
+    res.json({ user: updatedUser });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Update failed" });
   }
 };
