@@ -8,7 +8,12 @@ import { SideBar } from "../components/SideBar";
 import { Logo } from "../assets/icons/Logo"; // Import your Logo here
 import { HamIcon } from "../assets/icons/HamIcon";
 import { useNavigate } from "react-router-dom";
-import { getContents, addContent, NewContentPayload } from "../api/content";
+import {
+  getContents,
+  addContent,
+  NewContentPayload,
+  userRevokeShareProfile,
+} from "../api/content";
 import { userShareProfile } from "../api/content"; // add API
 
 // genric type for contents line 28
@@ -36,10 +41,20 @@ function Dashboard() {
       const res = await userShareProfile();
       navigator.clipboard.writeText(res.profileShareLink);
       alert("Profile link copied!");
-    } catch {
+    } catch (e) {
       alert("Could not generate profile link");
     }
   };
+
+  const handleRevokeShare = async () => {
+    try {
+      await userRevokeShareProfile();
+      alert("Profile sharing disabled");
+    } catch (e) {
+      alert("Could not disable sharing");
+    }
+  };
+
   // fetch on mount
   useEffect(() => {
     (async () => {
@@ -93,6 +108,12 @@ function Dashboard() {
             startIcon={<ShareIcon size="md" />}
             onClick={handleShareProfile}
           />
+          <Button
+            variant="secondary"
+            text="Revoke"
+            size="md"
+            onClick={handleRevokeShare}
+          />
         </div>
       </header>
 
@@ -135,6 +156,8 @@ function Dashboard() {
         ))}
       </div>
 
+
+      
       {/* Create Content Modal */}
       {modalOpen && (
         <CreateContentModal
@@ -147,7 +170,7 @@ function Dashboard() {
               setContents((prev) => [...prev, created]);
             } catch (err) {
               console.error("Error adding content", err);
-            } 
+            }
           }}
         />
       )}

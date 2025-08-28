@@ -51,13 +51,34 @@ export const updateContent = async (payload: UpdateContentPayload) => {
   return data; // { message, updateContent }
 };
 
-export async function userShareProfile() {
-  const res = await API.post("/brain/share"); // JWT auth header included
+export const userShareProfile = async () => {
+  const res = await API.post(
+    "/brain/share", // <-- add the leading slash
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    }
+  );
   return res.data;
-}
+};
 
 export async function accessSharedProfile(shareLink: string) {
   const res = await API.get(`/brain/${shareLink}`);
 
   return res.data;
 }
+
+export const userRevokeShareProfile = async () => {
+  const res = await API.post(
+    `/profile/revoke`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    }
+  );
+  return res.data;
+};

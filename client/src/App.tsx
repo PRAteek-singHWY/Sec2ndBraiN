@@ -5,8 +5,7 @@ import Dashboard from "./pages/dashboard";
 import HomePage from "./pages/home";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Profile from "./pages/Profile";
-import TwitterLinks from "./pages/TwitterLinks";
-import YoutubeLinks from "./pages/YoutubeLinks";
+import { SharedProfile } from "./components/SharedProfile";
 
 const App = () => {
   return (
@@ -22,6 +21,15 @@ const App = () => {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile/:shareLink"
+        element={
+          <ProtectedRoute>
+            <SharedProfile />
           </ProtectedRoute>
         }
       />

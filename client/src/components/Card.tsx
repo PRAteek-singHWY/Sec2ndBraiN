@@ -16,6 +16,7 @@ interface CardProps {
     id: string,
     updated: { title: string; link?: string; note?: string }
   ) => void;
+  readonly?: boolean;
 }
 
 export const Card = ({

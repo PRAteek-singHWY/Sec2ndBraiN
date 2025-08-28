@@ -3,9 +3,8 @@ import axios from "axios";
 import { AuthContext, UserProfile } from "./AuthContext";
 import { BACKEND_URL } from "../config";
 
-// 📝 Helper: get initials
 function getInitials(nameOrUsername?: string | null): string {
-  if (!nameOrUsername) return "U"; // fallback
+  if (!nameOrUsername) return "U";
   return nameOrUsername
     .trim()
     .split(" ")
@@ -14,7 +13,6 @@ function getInitials(nameOrUsername?: string | null): string {
     .toUpperCase();
 }
 
-// 📝 Enrich user object with defaults
 function enrichUser(user: UserProfile | null): UserProfile | null {
   if (!user) return null;
 
@@ -29,10 +27,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(
     localStorage.getItem("token")
   );
-  const [user, setUser] = useState<UserProfile | null>(null); // ✅ no localStorage
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // wrapper around setUser (enrich only, do not persist)
   const updateUser: React.Dispatch<React.SetStateAction<UserProfile | null>> = (
     newUser
   ) => {
@@ -44,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = (newToken: string, newUser?: UserProfile) => {
     setToken(newToken);
-    localStorage.setItem("token", newToken); // keep token persistent
+    localStorage.setItem("token", newToken);
 
     if (newUser) updateUser(newUser);
   };
