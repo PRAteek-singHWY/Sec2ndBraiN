@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 
 import { Request, Response } from "express";
 import { trim, z } from "zod";
+import dotenv from "dotenv";
+dotenv.config();
 
 import { nanoid } from "nanoid";
 // to generate unique links
@@ -252,6 +254,7 @@ export const userShareContent = async (
     return res.status(500).json({ error: "Could not enable profile sharing" });
   }
 };
+// http://localhost:5173/profile/sHnyMT1iEOTT
 // ACCESS CONTENT USING THE SHAREABLE LINK CREATED
 //
 //

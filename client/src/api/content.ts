@@ -57,6 +57,7 @@ export const userShareProfile = async () => {
     {},
     {
       headers: {
+        // will have to send jwt token for middleWare
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
     }
@@ -81,4 +82,28 @@ export const userRevokeShareProfile = async () => {
     }
   );
   return res.data;
+};
+
+export const updateUserProfile = async (payload: {
+  name?: string;
+  phone?: string;
+  bio?: string;
+}) => {
+  const { data } = await API.put(`/update-profile`, payload);
+  return data; // { user: updatedUser }
+};
+
+// UPLOAD profile picture
+export const uploadProfilePic = async (file: File) => {
+  const formData = new FormData();
+  formData.append("profilePic", file);
+
+  const { data } = await API.post(`/upload-profile-pic`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+
+  return data;
 };

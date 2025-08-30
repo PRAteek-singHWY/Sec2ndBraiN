@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/controllers/contentcontroller.ts","./src/controllers/usercontroller.ts","./src/middleware/usermiddleware.ts","./src/models/db.ts","./src/routes/userrouter.ts"],"version":"5.8.3"}
+{"root":["./src/index.ts","./src/config/cloudinary.ts","./src/config/upload.ts","./src/controllers/contentcontroller.ts","./src/controllers/usercontroller.ts","./src/middleware/usermiddleware.ts","./src/models/db.ts","./src/routes/userrouter.ts"],"version":"5.8.3"}

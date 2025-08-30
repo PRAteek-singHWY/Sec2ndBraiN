@@ -1,8 +1,10 @@
-import express, { Router } from "express";
-import multer from "multer"; // ✅ add multer import
+// import express, { Router } from "express";
+import upload from "../config/upload"; // no .js
+
 import {
   googleSignIn,
   updateUser,
+  uploadProfilePhoto,
   userSignIn,
   userSignUp,
   verifyToken,
@@ -17,11 +19,9 @@ import {
   userShareContent,
   userUpdateContent,
 } from "../controllers/contentController";
+import { Router } from "express";
 
 const userRouter = Router();
-
-// ✅ multer setup for memory storage
-const upload = multer({ storage: multer.memoryStorage() });
 
 // token-Verification
 userRouter.get("/verify-token", userMiddleware, verifyToken);
@@ -60,11 +60,12 @@ userRouter.post("/profile/revoke", userMiddleware, userRevokeProfileShare);
 
 // Updating User PROFILE
 // ✅ added multer middleware to handle profilePic file
-userRouter.put(
-  "/update-profile",
+userRouter.put("/update-profile", userMiddleware, updateUser);
+
+userRouter.post(
+  "/upload-profile-pic",
   userMiddleware,
   upload.single("profilePic"),
-  updateUser
+  uploadProfilePhoto
 );
-
 export default userRouter;

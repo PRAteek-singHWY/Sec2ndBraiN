@@ -4,10 +4,12 @@ import axios from "axios";
 import { BACKEND_URL } from "../config";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-
+import { Pencil } from "lucide-react"; // add this at top with ArrowLeft
+import { updateUserProfile, uploadProfilePic } from "../api/content";
 const Profile = () => {
   const { user, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [uploading, setUploading] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -15,6 +17,31 @@ const Profile = () => {
     phone: user?.phone || "",
     bio: user?.bio || "",
   });
+  const getInitials = (name?: string) => {
+    if (!name) return "?";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
+
+  const handleProfilePicChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+
+    try {
+      setUploading(true);
+      const res = await uploadProfilePic(file);
+      setUser(res.user); // update context with new profilePic
+    } catch (err) {
+      console.error("Upload failed", err);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -24,17 +51,8 @@ const Profile = () => {
 
   const handleSave = async () => {
     try {
-      const res = await axios.put(
-        `${BACKEND_URL}/api/v1/update-profile`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            token: localStorage.getItem("token") || "",
-          },
-        }
-      );
-      setUser(res.data.user);
+      const res = await updateUserProfile(formData);
+      setUser(res.user);
       setIsEditing(false);
     } catch (err) {
       console.error("Update failed", err);
@@ -64,9 +82,30 @@ const Profile = () => {
           />
         ) : (
           <div className="w-32 h-32 rounded-full bg-purple-600 text-white flex items-center justify-center text-5xl font-bold">
-            {user?.initials || "?"}
+            {getInitials(user?.name)}
           </div>
         )}
+
+        {/* Hidden file input */}
+        <input
+          type="file"
+          id="profilePicInput"
+          className="hidden"
+          accept="image/*"
+          onChange={handleProfilePicChange}
+        />
+
+        {/* Pencil Icon Overlay */}
+        <label
+          htmlFor="profilePicInput"
+          className="absolute bottom-2 right-2 bg-purple-600 text-white p-2 rounded-full cursor-pointer hover:bg-purple-700"
+        >
+          {uploading ? (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <Pencil size={16} />
+          )}
+        </label>
       </div>
 
       {/* User Info */}

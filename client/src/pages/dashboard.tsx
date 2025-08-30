@@ -156,8 +156,6 @@ function Dashboard() {
         ))}
       </div>
 
-
-      
       {/* Create Content Modal */}
       {modalOpen && (
         <CreateContentModal

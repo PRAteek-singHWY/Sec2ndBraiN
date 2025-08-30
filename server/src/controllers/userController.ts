@@ -249,3 +249,37 @@ export const updateUser = async (req: AuthenticatedRequest, res: Response) => {
     res.status(500).json({ error: "Update failed" });
   }
 };
+
+interface AuthenticatedRequest extends Request {
+  userId?: string;
+  file?: Express.Multer.File;
+}
+
+export const uploadProfilePhoto = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  try {
+    const userId = req.userId;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+    if (!req.file || !req.file.path) {
+      return res.status(400).json({ error: "No image uploaded" });
+    }
+
+    const imageUrl = req.file.path; // Cloudinary URL
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { profilePic: imageUrl },
+      { new: true }
+    ).select("-password");
+
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error("Upload profile error:", err);
+    res.status(500).json({ success: false, error: "Upload failed" });
+  }
+};
