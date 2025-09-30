@@ -107,3 +107,35 @@ export const uploadProfilePic = async (file: File) => {
 
   return data;
 };
+
+// ============================
+// 🟣 AI Search Endpoint
+// ============================
+
+export interface AIResponse {
+  answer: string;
+  sources?: any[];
+  sessionId?: string;
+}
+
+// query + optional sessionId for multi-turn
+
+export const searchAI = async (
+  query: string,
+  sessionId?: string
+): Promise<AIResponse> => {
+  const payload: any = { query };
+  if (sessionId) payload.sessionId = sessionId;
+  const { data } = await API.post("/search-ai", payload);
+  return data as AIResponse;
+};
+
+// what  is that part which is sending request to backend
+
+// it is inside handleSubmit whihc is being givento  to onSubmit
+// inside Fullscreen.tsx and then inside handleSubmit we are calling searchAI(qury) from Content.ts
+
+// now when i am adding data to my backend database mongoDB
+// iam also sendinga t the same time to. my vector database the teh same stuff
+
+// then embedding file is hgelping in converting that data into embedding and savig in vector databse

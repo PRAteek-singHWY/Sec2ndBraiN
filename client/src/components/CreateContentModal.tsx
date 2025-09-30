@@ -40,6 +40,8 @@ export const CreateContentModal = ({
 
   if (!isOpen) return null;
 
+  // CreateContentModal.tsx
+
   const handleSubmit = () => {
     const title = titleRef.current?.value?.trim() || "";
     const link = linkRef.current?.value?.trim() || "";
@@ -60,25 +62,12 @@ export const CreateContentModal = ({
       .split(",")
       .map((tag) => tag.trim())
       .filter(Boolean);
-    const selectedType = type.toLowerCase();
-    onSubmit?.({ title, link, tags: tagsArray, type: selectedType, note });
 
-    onSubmit?.({ title, link, tags: tagsArray, type, note }); // include note
-
-    // Validation: link is optional only for notes
-    if (!title || !type || (type !== "notes" && !link)) {
-      alert(
-        type === "notes"
-          ? "Please enter title and select a Link Type."
-          : "Please enter title, link and select a Link Type."
-      );
-      return;
-    }
-
+    // ✅ FIX: We only build ONE payload object
     const payload: NewContentPayload = {
       title,
       tags: tagsArray,
-      type,
+      type: type, // Use the state variable 'type'
       note,
     };
 
@@ -86,6 +75,7 @@ export const CreateContentModal = ({
       payload.link = link;
     }
 
+    // ✅ FIX: We only call onSubmit ONCE with the final payload
     onSubmit?.(payload);
 
     // Clear inputs after submit

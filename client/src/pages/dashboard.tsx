@@ -5,17 +5,21 @@ import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { CreateContentModal } from "../components/CreateContentModal";
 import { SideBar } from "../components/SideBar";
-import { Logo } from "../assets/icons/Logo"; // Import your Logo here
 import { HamIcon } from "../assets/icons/HamIcon";
 import { useNavigate } from "react-router-dom";
+
 import {
   getContents,
   addContent,
   NewContentPayload,
   userRevokeShareProfile,
+  searchAI,
 } from "../api/content";
 import { userShareProfile } from "../api/content"; // add API
-
+import { AIQueryBar } from "../components/AIQueryBar";
+import console from "console";
+import { Logo } from "../assets/icons/Logo";
+import { FullscreenSearch } from "../components/FullscreenSearch";
 // genric type for contents line 28
 type ContentDoc = {
   _id: string;
@@ -35,6 +39,15 @@ function Dashboard() {
   const [filter, setFilter] = useState<"all" | "youtube" | "twitter" | "notes">(
     "all"
   );
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
+  const [messages, setMessages] = useState<
+    { role: "user" | "assistant"; text: string }[]
+  >([]);
+
+  const [latestSources, setLatestSources] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const handleShareProfile = async () => {
     try {
@@ -43,6 +56,7 @@ function Dashboard() {
       alert("Profile link copied!");
     } catch (e) {
       alert("Could not generate profile link");
+      console.error(e);
     }
   };
 
@@ -74,26 +88,65 @@ function Dashboard() {
     return c.type.toLowerCase() === filter; // assumes c.type = "youtube" | "twitter" | "notes"
   });
 
+  // Called from FullscreenSearch when user sends a message
+  // instead of
+  // import { v4 as uuidv4 } from "uuid";
+
+  // use:
+  const id = crypto.randomUUID();
+
+  const handleSearchSubmit = async (query: string) => {
+    setLoading(true);
+    try {
+      const sid = sessionId || `sess_${id}`;
+      if (!sessionId) setSessionId(sid);
+
+      const res = await searchAI(query, sid);
+
+      setMessages((prev) => [...prev, { role: "assistant", text: res.answer }]);
+      setLatestSources(res.sources || []);
+
+      return res;
+    } catch (err: any) {
+      console.error("AI search error:", err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-purple-50 flex flex-col">
+    <div className="min-h-screen bg-purple-50 flex flex-col relative">
+      {/* Hamburger Icon pinned top-left, outside header */}
+      <div
+        className="absolute top-4 left-4 text-purple-600 p-2 w-max cursor-pointer z-50 mt-16 ml-1.5 "
+        role="button"
+        tabIndex={0}
+        onClick={() => setSideBarOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") setSideBarOpen(true);
+        }}
+      >
+        <HamIcon size="lg" />
+      </div>
+
       {/* Top header */}
-      <header className="flex items-center justify-between px-6 py-3 bg-purple-300 shadow-md ">
-        {/* Left: Logo and sidebar toggle */}
+      <header className="flex items-center justify-between px-6 py-3 bg-purple-300 shadow-md">
+        {/* Left: Logo (click to home) */}
         <div
-          className="flex gap-4 justify-between items-center cursor-pointer 
-        "
+          className="flex gap-4 justify-between items-center cursor-pointer"
           onClick={() => navigate("/")}
         >
-          <div className=" text-purple-600 " aria-label="Brainly Logo">
+          <div className="text-purple-600" aria-label="Brainly Logo">
             <Logo />
           </div>
-          <h1 className="text-3xl font-extrabold  text-purple-600 font-mono">
+          <h1 className="text-3xl font-extrabold text-purple-600 font-mono">
             Brainly
           </h1>
         </div>
 
         {/* Right: Buttons */}
-        <div className="flex gap-4 ">
+        <div className="flex gap-4">
           <Button
             variant="primary"
             text="Add Content"
@@ -117,19 +170,23 @@ function Dashboard() {
         </div>
       </header>
 
-      {/* triggering sideBar */}
-      <div
-        className="text-purple-600 cursor-pointer p-2 ml-5"
-        onClick={() => setSideBarOpen(true)}
-        aria-label="Open Sidebar"
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") setSideBarOpen(true);
-        }}
-      >
-        <HamIcon size="lg" />
+      {/* Search Bar OUTSIDE the header */}
+      <div className="px-6 py-4 flex justify-center">
+        <AIQueryBar onOpen={() => setSearchOpen(true)} />
       </div>
+
+      {/* Full screen search modal */}
+      <FullscreenSearch
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onSubmit={handleSearchSubmit}
+        sessionId={sessionId}
+        messages={messages}
+        latestSources={latestSources}
+        setMessages={setMessages}
+        setLatestSources={setLatestSources}
+        loading={loading}
+      />
 
       {/* Main content */}
       <div className="flex gap-6 p-6 ml-1.5">
@@ -141,7 +198,7 @@ function Dashboard() {
             link={c.link}
             type={c.type}
             tags={c.tags?.map((t) => t.tagTitle)}
-            note={c.note} // pass the note here
+            note={c.note}
             onDeleteLocal={(id) =>
               setContents((prev) => prev.filter((item) => item._id !== id))
             }
@@ -158,14 +215,16 @@ function Dashboard() {
 
       {/* Create Content Modal */}
       {modalOpen && (
+        // dashboard.tsx
+
         <CreateContentModal
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
           onSubmit={async (data: NewContentPayload) => {
             try {
-              console.log(data);
               const created = await addContent(data);
-              setContents((prev) => [...prev, created]);
+              // ✅ FIX: Destructure the 'populated' object from the response
+              setContents((prev) => [...prev, created.populated]);
             } catch (err) {
               console.error("Error adding content", err);
             }

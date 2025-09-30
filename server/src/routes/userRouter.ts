@@ -20,6 +20,7 @@ import {
   userUpdateContent,
 } from "../controllers/contentController";
 import { Router } from "express";
+import { searchAI } from "../controllers/searchAIController";
 
 const userRouter = Router();
 
@@ -68,4 +69,8 @@ userRouter.post(
   upload.single("profilePic"),
   uploadProfilePhoto
 );
+
+// OPEN AI EMBEDDING AND VECTOR DATABASES
+userRouter.post("/search-ai", searchAI);
+
 export default userRouter;

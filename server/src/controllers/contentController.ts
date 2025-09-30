@@ -1,32 +1,15 @@
 import { Content, Tag, User } from "../models/db";
 import mongoose from "mongoose";
-
+import { z } from "zod";
 import { Request, Response } from "express";
-import { trim, z } from "zod";
 import dotenv from "dotenv";
 dotenv.config();
+import { nanoid } from "nanoid"; // to generate unique links import { error } from "console"; import { type } from "os"; import { link } from "fs";
+import { storeEmbeddingForDoc } from "../services/embeddingService";
+import { index } from "../services/pineconeClient";
+import { extractContentFromLink } from "../services/contentExtractor";
+dotenv.config();
 
-import { nanoid } from "nanoid";
-// to generate unique links
-import { error } from "console";
-import { type } from "os";
-import { link } from "fs";
-
-// ADD CONTENT
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
 interface AuthenticatedRequest extends Request {
   userId?: string;
 }
@@ -49,7 +32,7 @@ const contentSchema = z
     { message: "Notes should not contain a link" }
   );
 
-// it's because you're using the default Express Request type, which doesn't know about your custom userId added in the middleware.
+// --- ADD CONTENT ---
 export const userAddContent = async (
   req: AuthenticatedRequest,
   res: Response
@@ -61,19 +44,17 @@ export const userAddContent = async (
   const { tags = [] } = parsed.data;
 
   try {
+    // 1) Resolve tags
     const tagIds: mongoose.Types.ObjectId[] = [];
     for (const tagTitle of tags) {
-      // checking to find existing tag
       let tag = await Tag.findOne({ tagTitle });
-      // if not preExisting
       if (!tag) {
-        // save in database only if not already present
         tag = await Tag.create({ tagTitle });
       }
-      // push anyways
       tagIds.push(tag._id);
     }
 
+    // 2) Create content in Mongo
     const content = await Content.create({
       userId: req.userId,
       title: parsed.data.title,
@@ -83,9 +64,41 @@ export const userAddContent = async (
       note: parsed.data.note,
     });
 
-    // return the created doc populated so frontend can show tags immediately
-    const populated = await Content.findById(content._id).populate("tags");
+    // 3) Extract content from the link if it exists
+    const extractedContent = await extractContentFromLink(
+      parsed.data.type,
+      parsed.data.link
+    );
 
+    console.log(">>>> Extracted Content:", extractedContent);
+
+    // 4) Build text for embedding (Now with real content!)
+    const embedText = `${parsed.data.title}\n\n${
+      parsed.data.note || ""
+    }\n\n${extractedContent}`;
+
+
+
+
+
+
+
+
+    // 5) Store embedding
+    try {
+      await storeEmbeddingForDoc(content._id.toString(), embedText, {
+        // IMPORTANT: Add the link to the metadata here!
+        title: parsed.data.title,
+        type: parsed.data.type,
+        link: parsed.data.link, // This lets you show the source link in search results
+        userId: req.userId,
+      });
+    } catch (err) {
+      console.error("⚠️ Failed to store embedding:", err);
+    }
+
+    // 5) Return populated doc
+    const populated = await Content.findById(content._id).populate("tags");
     return res.json({
       message: "Content created",
       contentId: content._id,
@@ -93,25 +106,15 @@ export const userAddContent = async (
     });
   } catch (err) {
     console.error("Error creating content:", err);
-
     return res.status(500).json({ error: "Internal Server error" });
   }
 };
-// GET CONTENT
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
+
+
+
+
+
+// --- GET CONTENT ---
 export const userGetContent = async (
   req: AuthenticatedRequest,
   res: Response
@@ -128,21 +131,13 @@ export const userGetContent = async (
     return res.status(500).json({ error: "Error fetching content" });
   }
 };
-// DELETE CONTENT
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
+
+// --- DELETE CONTENT ---
+// server/src/controllers/contentController.ts
+
+interface AuthenticatedRequest extends Request {
+  userId?: string;
+}
 
 export const userDeleteContent = async (
   req: AuthenticatedRequest,
@@ -150,41 +145,44 @@ export const userDeleteContent = async (
 ) => {
   const { contentId } = req.body;
   const userId = req.userId;
-  if (!contentId)
+
+  if (!contentId) {
     return res.status(400).json({ error: "Content ID is required" });
+  }
 
   try {
+    // 1️⃣ Delete from Mongo
     const deleted = await Content.findOneAndDelete({
       _id: contentId,
-      userId: userId,
+      userId,
     });
-    if (!deleted) return res.status(404).json({ error: "Content not found" });
-    return res.status(200).json({ message: "Content deleted" });
-  } catch {
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Content not found" });
+    }
+
+    // vector database
+    // 2️⃣ Delete all embeddings for this docId from Pinecone
+    await index.namespace("default").deleteMany({
+      filter: { docId: contentId },
+    });
+
+    return res
+      .status(200)
+      .json({ message: "Content deleted from Mongo & Pinecone" });
+  } catch (err) {
+    console.error("Error deleting content:", err);
     return res.status(500).json({ error: "Failed to delete content" });
   }
 };
-// UPDATE CONTENT
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-// schema for validating update
+
+// --- UPDATE CONTENT ---
 const contentUpdateSchema = z.object({
   contentId: z.string().min(1),
   title: z.string().min(1).optional(),
   link: z.string().min(1).optional(),
 });
+
 export const userUpdateContent = async (
   req: AuthenticatedRequest,
   res: Response
@@ -203,10 +201,8 @@ export const userUpdateContent = async (
     if (!content) {
       return res.status(404).json({ error: "Content not found" });
     }
-    // update content
     if (title !== undefined) content.title = title;
     if (link !== undefined) content.link = link;
-    // saving updates to database
     await content.save();
     return res.status(200).json({
       message: "Content Updated Successfully",
@@ -218,21 +214,7 @@ export const userUpdateContent = async (
   }
 };
 
-// CREATE SHAREABLE LINK FOR CONTENT
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
+// --- SHARE PROFILE / ACCESS SHARED CONTENT ---
 export const userShareContent = async (
   req: AuthenticatedRequest,
   res: Response
@@ -241,7 +223,7 @@ export const userShareContent = async (
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    const shareLink = nanoid(12); // generate unique short id
+    const shareLink = nanoid(12);
     user.profileShareLink = shareLink;
     user.isProfileSharingEnabled = true;
     await user.save();
@@ -254,22 +236,7 @@ export const userShareContent = async (
     return res.status(500).json({ error: "Could not enable profile sharing" });
   }
 };
-// http://localhost:5173/profile/sHnyMT1iEOTT
-// ACCESS CONTENT USING THE SHAREABLE LINK CREATED
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
+
 export const userRevokeProfileShare = async (
   req: AuthenticatedRequest,
   res: Response
@@ -288,21 +255,6 @@ export const userRevokeProfileShare = async (
   }
 };
 
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-
 export const userAccessSharedContent = async (req: Request, res: Response) => {
   const { shareLink } = req.params;
 
@@ -317,7 +269,6 @@ export const userAccessSharedContent = async (req: Request, res: Response) => {
         .status(404)
         .json({ error: "Profile not found or sharing disabled" });
 
-    // fetch all contents of that user (read-only)
     const contents = await Content.find({ userId: user._id }).populate("tags");
 
     return res.status(200).json({
