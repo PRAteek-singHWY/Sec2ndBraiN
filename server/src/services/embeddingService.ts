@@ -1,13 +1,11 @@
 // server/src/services/embeddingService.ts
 
-import { HfInference } from "@huggingface/inference";
+// import { GoogleGenerativeAI } from "@google/generative-ai"; // 👈 New Import
 import dotenv from "dotenv";
 import { index } from "./pineconeClient";
+import axios from "axios"; // Using axios for the Jina AI API call
 
 dotenv.config();
-
-const hf = new HfInference(process.env.HUGGING_FACE_TOKEN);
-const EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2";
 
 // Optional: define PineconeRecord if not imported
 type PineconeRecord<T = Record<string, any>> = {
@@ -16,80 +14,65 @@ type PineconeRecord<T = Record<string, any>> = {
   metadata: T;
 };
 
-// function chunkText(text: string, chunkSize = 800, overlap = 200): string[] {
-//   if (!text || text.trim() === "") {
-//     return [];
-//   }
-
-//   const chunks: string[] = [];
-//   let start = 0;
-
-//   while (start < text.length) {
-//     const end = Math.min(text.length, start + chunkSize);
-//     if (start >= end) break;
-//     chunks.push(text.slice(start, end));
-//     start = end - overlap;
-//   }
-
-//   return chunks;
-// }
-
+// This function is perfect and needs no changes.
 function chunkText(text: string, chunkSize = 800, overlap = 200): string[] {
   if (!text || text.trim() === "") {
     return [];
   }
-
   if (chunkSize <= overlap) {
     throw new Error(
       `❌ Invalid params: chunkSize (${chunkSize}) must be greater than overlap (${overlap})`
     );
   }
-
   const chunks: string[] = [];
   let start = 0;
-
   while (start < text.length) {
     const end = Math.min(text.length, start + chunkSize);
     chunks.push(text.slice(start, end));
-    start += chunkSize - overlap; // ✅ move forward safely
+    start += chunkSize - overlap;
   }
-
   return chunks;
 }
 
+// --- UPDATED: The getEmbedding function now uses Gemini ---
 export async function getEmbedding(text: string): Promise<number[]> {
   try {
-    const response = await hf.featureExtraction({
-      model: EMBEDDING_MODEL,
-      inputs: text,
-    });
-
-    if (Array.isArray(response)) {
-      if (Array.isArray(response[0])) {
-        return response[0] as number[];
-      } else if (typeof response[0] === "number") {
-        return response as number[];
+    const response = await axios.post(
+      "https://api.jina.ai/v1/embeddings",
+      {
+        input: [text],
+        model: "jina-embeddings-v2-base-en",
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.JINA_API_KEY}`,
+          "Content-Type": "application/json",
+        },
       }
+    );
+    const embedding = response.data.data[0].embedding;
+    if (!embedding) {
+      throw new Error("Invalid embedding response from Jina AI.");
     }
-
-    throw new Error("Unexpected or empty response from embedding model.");
+    return embedding;
   } catch (err) {
-    console.error("❌ Hugging Face embedding error:", err);
+    console.error("❌ Jina AI embedding error:", err);
     throw err;
   }
 }
+// ---
 
-// ✅ Custom type guard to satisfy TypeScript
+// This custom type guard is perfect and needs no changes.
 function isValidUpsert(item: PineconeRecord | null): item is PineconeRecord {
   return item !== null;
 }
 
+// This function is perfect and needs no changes, as it just uses getEmbedding.
 export async function storeEmbeddingForDoc(
   docId: string,
   fullText: string,
   metadata: Record<string, any> = {}
 ) {
-  // ✅ SAFEGUARD #1
   if (!fullText || fullText.trim().length === 0) {
     console.warn(`⚠️ Skipping empty document ${docId}`);
     return;
@@ -112,7 +95,6 @@ export async function storeEmbeddingForDoc(
   );
 
   const upserts: (PineconeRecord | null)[] = embeddings.map((vector, i) => {
-    // ✅ SAFEGUARD #2
     if (!vector || vector.length === 0 || !Number.isFinite(vector[0]))
       return null;
 
@@ -127,7 +109,8 @@ export async function storeEmbeddingForDoc(
       },
     };
   });
-  const validUpserts = upserts.filter(isValidUpsert); // ✅ Safe, narrowed to PineconeRecord[]
+
+  const validUpserts = upserts.filter(isValidUpsert);
 
   if (validUpserts.length === 0) {
     console.warn(`⚠️ No valid embeddings to upsert for doc ${docId}`);
@@ -146,6 +129,7 @@ export async function storeEmbeddingForDoc(
   }
 }
 
+// This function is perfect and needs no changes, as it just uses getEmbedding.
 export async function searchVectorDB(query: string, topK = 5) {
   const qVector = await getEmbedding(query);
 

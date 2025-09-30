@@ -20,7 +20,47 @@ interface FullscreenSearchProps {
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   setLatestSources: React.Dispatch<React.SetStateAction<any[]>>;
   loading?: boolean;
+  filter: string;
+  optimizedQuery: string; // <-- Add the new prop
+
+  setFilter: (filter: "all" | "youtube" | "twitter" | "notes") => void;
 }
+
+// A new sub-component for the filter buttons
+const FilterButtons = ({ filter, setFilter }) => {
+  const options = ["all", "youtube", "twitter", "notes"];
+  return (
+    <div className="flex items-center gap-2 mb-4">
+      <span className="text-sm font-semibold text-gray-500">Search in:</span>
+      {options.map((option) => (
+        <button
+          key={option}
+          onClick={() => setFilter(option)}
+          className={`px-3 py-1 text-sm rounded-full capitalize transition-colors ${
+            filter === option
+              ? "bg-purple-600 text-white font-semibold"
+              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+          }`}
+        >
+          {option}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+// NEW: A sub-component to display the prompt nicely
+const PromptDisplay = ({ query }) => {
+  const displayText = query || "The optimized question will appear here.";
+  return (
+    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+      <h5 className="font-bold text-green-800 mb-1 text-xs">
+        Optimized Query (with context)
+      </h5>
+      <p className="text-green-700 text-sm">{displayText}</p>
+    </div>
+  );
+};
 
 export const FullscreenSearch = ({
   open,
@@ -32,6 +72,10 @@ export const FullscreenSearch = ({
   setMessages,
   setLatestSources,
   loading = false,
+  filter,
+  optimizedQuery,
+
+  setFilter,
 }: FullscreenSearchProps) => {
   const [query, setQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,7 +112,7 @@ export const FullscreenSearch = ({
     } catch (err) {
       const errorText =
         err.response?.data?.message || "Error getting response. Try again.";
-        // setting up the messages with response from assistant 
+      // setting up the messages with response from assistant
       setMessages((prev) => [...prev, { role: "assistant", text: errorText }]);
       // Use global console, no import needed
       console.error("Search submit failed:", err);
@@ -113,6 +157,10 @@ export const FullscreenSearch = ({
           <div className="flex-1 overflow-hidden p-6 flex gap-6">
             {/* Messages column */}
             <div className="flex-1 flex flex-col overflow-hidden">
+              {/* NEW: Add the filter buttons here */}
+
+              <FilterButtons filter={filter} setFilter={setFilter} />
+
               <div ref={scrollerRef} className="flex-1 overflow-auto pr-4">
                 <AIAnswerCard messages={messages} />
               </div>
@@ -127,8 +175,25 @@ export const FullscreenSearch = ({
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Type a question about your saved content..."
                     onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                    className="flex-1 rounded-full border px-4 py-3 outline-none focus:ring-2 focus:ring-purple-400"
+                    className="
+    flex-1
+    mb-2
+    rounded-full
+    border
+    border-gray-300
+    px-4
+    py-3
+    outline-none
+    focus:border-purple-500
+    focus:ring-0
+    focus:shadow-[0_0_0_2px_rgba(139,92,246,0.3)]
+    transition
+    duration-200
+    ease-in-out
+    box-border
+  "
                   />
+
                   <Button
                     text={isSubmitting || loading ? "Thinking..." : "Send"}
                     variant="primary"
@@ -140,28 +205,12 @@ export const FullscreenSearch = ({
             </div>
 
             {/* Right: context / sources column */}
-            <aside className="w-80 border-l pl-4">
-              <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                Context (top matches)
+            <aside className="w-80 border-l pl-4 flex flex-col">
+              <h4 className="text-sm font-semibold text-gray-700 mb-2 flex-shrink-0">
+                Final Prompt to AI
               </h4>
-              <div className="space-y-3 max-h-[56vh] overflow-auto">
-                {latestSources.length === 0 ? (
-                  <div className="text-sm text-gray-500">
-                    Context will appear here after the first response.
-                  </div>
-                ) : (
-                  latestSources.map((s: any, idx: number) => (
-                    <div key={idx} className="p-3 bg-white border rounded-lg">
-                      <div className="text-sm font-medium text-gray-800 break-words">
-                        {typeof s === "string"
-                          ? s
-                          : s.title ||
-                            s.link ||
-                            JSON.stringify(s).slice(0, 400)}
-                      </div>
-                    </div>
-                  ))
-                )}
+              <div className="flex-1 overflow-auto space-y-3">
+                <PromptDisplay query={optimizedQuery} />
               </div>
             </aside>
           </div>

@@ -48,3 +48,11 @@ src/index.ts: The entry point for your backend app.
 npm run build -> build the project(convert from ts to js)
 npm run start -> (node dist/index.js)
 npm run dev -> build and start
+
+
+
+
+
+
+GROQ 
+JINA

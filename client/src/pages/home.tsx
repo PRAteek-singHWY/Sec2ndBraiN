@@ -22,7 +22,7 @@ const HomePage: React.FC = () => {
     <div className="min-h-screen bg-purple-50 flex flex-col items-center justify-center px-4 text-center text-purple-600">
       <Logo />
       <h1 className="text-5xl font-extrabold mb-4 text-purple-600 font-mono">
-        Brainly
+        Sec2ndBrain
       </h1>
       <p className="max-w-xl mb-10 text-lg text-purple-700 font-light italic">
         Your personal library for the internet's best moments. Paste, save, and

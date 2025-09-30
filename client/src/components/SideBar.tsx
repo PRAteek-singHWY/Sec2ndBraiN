@@ -40,7 +40,7 @@ export const SideBar = ({ onClose, isOpen, setFilter }: SideBarProps) => {
         <div className="flex items-center justify-start p-4 gap-3">
           <Logo />
           <div className="text-2xl font-extrabold font-mono text-purple-600">
-            Brainly
+            Sec2ndBrain
           </div>
         </div>
         {/* Profile Avatar Only

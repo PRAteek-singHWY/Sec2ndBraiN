@@ -120,12 +120,24 @@ export interface AIResponse {
 
 // query + optional sessionId for multi-turn
 
+// NEW: Define the type for a message in the conversation history
+export interface HistoryMessage {
+  role: "user" | "model";
+  parts: { text: string }[];
+}
+
+// MODIFIED: The searchAI function now accepts history and a filter
 export const searchAI = async (
   query: string,
-  sessionId?: string
+  history: HistoryMessage[],
+  filter: string
 ): Promise<AIResponse> => {
-  const payload: any = { query };
-  if (sessionId) payload.sessionId = sessionId;
+  // The payload now includes the query, history, and filter
+  const payload = {
+    query,
+    history,
+    filter,
+  };
   const { data } = await API.post("/search-ai", payload);
   return data as AIResponse;
 };
