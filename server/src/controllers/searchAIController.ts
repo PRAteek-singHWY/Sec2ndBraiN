@@ -29,6 +29,7 @@ export const searchAI = async (req: Request, res: Response) => {
     }
 
     const results = await index.query(queryRequest);
+    
 
     // Step 2: Build context string from matches
     const context = results.matches.length
