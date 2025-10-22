@@ -4,9 +4,9 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "npm run build && npm run start",
+    "dev": "ts-node src/index.ts",
     "drop-email-index": "ts-node scripts/dropEmailIndex.ts"
   },
   "keywords": [],
