@@ -1,16 +1,16 @@
-  {
+{
   "compilerOptions": {
     "target": "ES2020",
     "module": "CommonJS",
     "outDir": "./dist",
     "rootDir": "./src",
 
-    /* These are the critical fixes */
+    /* The critical fixes */
     "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
     
-    /* This handles the strict mode errors */
+    /* This prevents the "implicit 'any'" errors */
     "strict": true,
     "noImplicitAny": false
   },
