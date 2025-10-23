@@ -1,4 +1,4 @@
-# 🧠 Second2ndBrain -> AI-Powered Content Retrieval and Sharing App
+# 🧠 Second2ndBrain -> RAG based AI-Powered Content Retrieval and Sharing App
 
 ## 📘 Overview
 
