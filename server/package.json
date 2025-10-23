@@ -9,6 +9,9 @@
     "dev": "ts-node src/index.ts",
     "drop-email-index": "ts-node scripts/dropEmailIndex.ts"
   },
+  "engines": {
+    "node": "20.x"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
