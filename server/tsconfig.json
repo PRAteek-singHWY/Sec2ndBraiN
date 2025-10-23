@@ -1,13 +1,18 @@
-{
+  {
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src",
-    "module": "commonjs",
     "target": "ES2020",
+    "module": "CommonJS",
+    "outDir": "./dist",
+    "rootDir": "./src",
+
+    /* These are the critical fixes */
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "skipLibCheck": true,
+    
+    /* This handles the strict mode errors */
     "strict": true,
-    "noImplicitAny": false, // <-- Add this line
-    "skipLibCheck": true
-  }
+    "noImplicitAny": false
+  },
+  "include": ["src/**/*"]
 }
