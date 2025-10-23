@@ -46,7 +46,6 @@ export const SharedProfile = () => {
             type={c.type}
             tags={c.tags?.map((t: any) => t.tagTitle)}
             note={c.note}
-            readonly // 🔒 we’ll add this prop in Card so it doesn’t show edit/delete
           />
         ))}
       </div>

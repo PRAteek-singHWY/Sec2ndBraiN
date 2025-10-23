@@ -279,6 +279,8 @@ function Dashboard() {
         setLatestSources={setLatestSources}
         loading={loading}
         optimizedQuery={optimizedQuery} // <-- PASS THE NEW PROP
+        filter={filter}
+        setFilter={setFilter}
       />
 
       {/* Main content */}

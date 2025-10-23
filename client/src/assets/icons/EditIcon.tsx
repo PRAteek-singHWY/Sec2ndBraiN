@@ -9,7 +9,7 @@ export const EditIcon = ({ size = "md" }: { size?: "sm" | "md" | "lg" }) => {
       viewBox="0 0 24 24"
       stroke-width="1.5"
       stroke="currentColor"
-      class="size-3"
+      className="size-3"
     >
       <path
         stroke-linecap="round"

@@ -112,11 +112,11 @@ export const uploadProfilePic = async (file: File) => {
 // 🟣 AI Search Endpoint
 // ============================
 
-export interface AIResponse {
+export type AIResponse = {
   answer: string;
-  sources?: any[];
-  sessionId?: string;
-}
+  sources: any[];
+  optimizedQuery?: string; // <-- ADD THIS LINE
+};
 
 // query + optional sessionId for multi-turn
 

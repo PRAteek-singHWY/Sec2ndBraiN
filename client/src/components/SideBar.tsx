@@ -6,7 +6,7 @@ import { SideBarItem } from "./SideBarItem";
 import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { NotesIcon } from "../assets/icons/NOtesIcon";
+import { NotesIcon } from "../assets/icons/NotesIcon";
 import { DocIcon } from "../assets/icons/DocIcon";
 
 interface SideBarProps {

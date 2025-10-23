@@ -1,7 +1,6 @@
 import { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
-import axios from "axios";
-import { BACKEND_URL } from "../config";
+
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Pencil } from "lucide-react"; // add this at top with ArrowLeft
@@ -17,7 +16,7 @@ const Profile = () => {
     phone: user?.phone || "",
     bio: user?.bio || "",
   });
-  const getInitials = (name?: string) => {
+  const getInitials = (name?: string | null) => {
     if (!name) return "?";
     return name
       .split(" ")
