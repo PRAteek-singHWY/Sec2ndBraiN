@@ -109,7 +109,7 @@ export const Card = ({
             className="cursor-pointer hover:text-purple-600"
             onClick={handleEdit}
           >
-            <EditIcon size="md" />
+            <EditIcon />
           </div>
           <div
             className="cursor-pointer hover:text-red-500"
