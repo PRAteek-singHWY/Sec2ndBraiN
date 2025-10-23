@@ -4,15 +4,16 @@
     "module": "CommonJS",
     "outDir": "./dist",
     "rootDir": "./src",
+    "strict": true,
+    "noImplicitAny": false,
 
-    /* The critical fixes */
+    /* --- The Critical Fixes --- */
     "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    
-    /* This prevents the "implicit 'any'" errors */
-    "strict": true,
-    "noImplicitAny": false
+
+    /* --- This is the new line --- */
+    "typeRoots": ["./node_modules/@types"]
   },
   "include": ["src/**/*"]
 }
