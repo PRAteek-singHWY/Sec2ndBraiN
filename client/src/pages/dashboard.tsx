@@ -134,7 +134,7 @@ function Dashboard() {
 
   // use:
 
-  const id = crypto.randomUUID();
+  // const id = crypto.randomUUID();
 
   const [optimizedQuery, setOptimizedQuery] = useState<string>(""); // <-- NEW STATE
 

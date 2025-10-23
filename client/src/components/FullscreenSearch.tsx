@@ -109,7 +109,7 @@ export const FullscreenSearch = ({
       const res = await onSubmit(userText);
       // setMessages((prev) => [...prev, { role: "assistant", text: res.answer }]);
       setLatestSources(res.sources || []);
-    } catch (err) {
+    } catch (err: any) {
       const errorText =
         err.response?.data?.message || "Error getting response. Try again.";
       // setting up the messages with response from assistant

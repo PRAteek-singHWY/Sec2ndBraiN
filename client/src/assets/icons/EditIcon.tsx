@@ -1,7 +1,6 @@
 // assets/icons/EditIcon.tsx
 
-export const EditIcon = ({ size = "md" }: { size?: "sm" | "md" | "lg" }) => {
-  const dimensions = size === "sm" ? 10 : size === "lg" ? 24 : 18;
+export const EditIcon = () => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
