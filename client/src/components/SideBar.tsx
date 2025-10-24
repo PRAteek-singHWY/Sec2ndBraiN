@@ -21,9 +21,9 @@ export const SideBar = ({ onClose, isOpen, setFilter }: SideBarProps) => {
 
   if (!isOpen) return null;
 
-  const handleLogout = () => {
-    logout();
-    navigate("/");
+  const handleLogout = async () => {
+    await logout(); // <-- Wait for the server to clear the cookie
+    navigate("/"); // <-- THEN navigate
   };
 
   return (

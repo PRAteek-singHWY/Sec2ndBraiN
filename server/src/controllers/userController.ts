@@ -91,9 +91,17 @@ export const userSignUp = async (
       expiresIn: "1h",
     });
 
+    // 1. SET THE COOKIE
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 1000, // 1 hour
+      path: "/",
+    });
+
     return res.status(200).json({
       message: "Signed up Successfully",
-      token,
       user: {
         username: newUser.username,
         email: newUser.email ?? null,
@@ -152,9 +160,18 @@ export const userSignIn = async (
       expiresIn: "1h",
     });
 
+    // ELIMINATING LOCALSTORAGE
+    // 1. SET THE COOKIE
+    res.cookie("token", token, {
+      httpOnly: true, // Cannot be accessed by client-side JS
+      secure: process.env.NODE_ENV === "production", // Only send over HTTPS
+      sameSite: "strict", // Best CSRF protection
+      maxAge: 60 * 60 * 1000, // 1 hour in milliseconds (to match 'expiresIn')
+      path: "/",
+    });
+
     return res.status(200).json({
       message: "Signed in Successfully",
-      token,
       user: {
         username: existingUser.username,
         email: existingUser.email ?? null,
@@ -192,12 +209,12 @@ export const googleSignIn = async (req: Request, res: Response) => {
       user = await User.create({
         email,
         username: email,
-        name,
-        profilePic: picture || null, // save google photo if available
+        name: payload?.name || "",
+        profilePic: payload?.picture || null, // save google photo if available
       });
     } else {
       // ✅ Existing user
-      if (!user.name) user.name = name;
+      if (!user.name) user.name = payload?.name || "";
 
       // If user never uploaded custom pic, refresh with Google’s
       if (!user.profilePic && picture) {
@@ -212,9 +229,17 @@ export const googleSignIn = async (req: Request, res: Response) => {
       expiresIn: "1h",
     });
 
+    // 1. SET THE COOKIE
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 1000, // 1 hour
+      path: "/",
+    });
+
     return res.status(200).json({
       message: "Google sign-in successful",
-      token,
       user: {
         username: user.username,
         email: user.email ?? null,
@@ -226,6 +251,20 @@ export const googleSignIn = async (req: Request, res: Response) => {
     console.error("Google sign-in error:", err);
     return res.status(401).json({ message: "Invalid Google token" });
   }
+};
+
+// In userController.ts
+
+export const userLogout = (req: Request, res: Response) => {
+  // This tells the browser to delete the cookie
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/", // Make sure to specify the path
+  });
+
+  return res.status(200).json({ message: "Logged out successfully" });
 };
 
 export const updateUser = async (req: AuthenticatedRequest, res: Response) => {

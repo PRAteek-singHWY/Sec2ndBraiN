@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { Card } from "../components/Card";
+import { BACKEND_URL } from "../config";
 
 export const SharedProfile = () => {
   const { shareLink } = useParams();
@@ -11,8 +12,7 @@ export const SharedProfile = () => {
   useEffect(() => {
     (async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:3000/api/v1/brain/${shareLink}`
+        const res = await axios.get(`${BACKEND_URL}/api/v1/brain/${shareLink}`
         );
         setProfile(res.data.profile);
         setContents(res.data.contents);

@@ -7,7 +7,8 @@ interface SideBarItemProps {
 
 export const SideBarItem = ({ text, icon }: SideBarItemProps) => {
   return (
-    <div className="flex text-gray-900 py-2 px-4 cursor-pointer hover:bg-blue-200 rounded-4xl w-55">
+    // Updated hover:bg-purple-200 to match your theme
+    <div className="flex text-gray-900 py-2 px-4 cursor-pointer hover:bg-purple-200 rounded-lg w-full">
       <div className="pr-2">{icon}</div>
       <div>{text}</div>
     </div>

@@ -12,10 +12,9 @@ const HomePage: React.FC = () => {
   const baseButtonClasses =
     "w-40 py-2 px-4 rounded-lg font-bold border-2 text-lg transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 cursor-pointer";
 
-  const handleSignOut = () => {
-    // Your real sign-out logic here (e.g., clear tokens, update context/state)
-    logout();
-    navigate("/");
+  const handleSignOut = async () => {
+    await logout(); // <-- Wait for the server to clear the cookie
+    navigate("/"); // <-- THEN navigate
   };
 
   return (

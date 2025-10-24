@@ -10,7 +10,7 @@ import { GoogleLogin } from "@react-oauth/google";
 export const Signin = () => {
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
-  const { login } = useContext(AuthContext);
+  const { login } = useContext(AuthContext); // Get the new login function
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -30,8 +30,11 @@ export const Signin = () => {
         password,
       });
 
-      if (res.data.token) {
-        login(res.data.token, res.data.user);
+      // --- FIX HERE ---
+      // Check for the user object, not the token
+      if (res.data.user) {
+        // Pass only the user object to login
+        login(res.data.user);
         navigate("/dashboard");
       } else {
         alert("Invalid response from server.");
@@ -59,7 +62,7 @@ export const Signin = () => {
           />
         </div>
 
-        {/* Google sign-in */}
+        {/* Google sign-in (This part was already correct) */}
         <div className="flex justify-center pt-2">
           <GoogleLogin
             onSuccess={async (cred) => {
@@ -71,15 +74,15 @@ export const Signin = () => {
                   }
                 );
 
-                const { token, user } = res.data;
+                const { user } = res.data; // Only get user
 
-                if (!token || !user) {
+                if (!user) {
                   alert("Google sign-in failed: Invalid response");
                   return;
                 }
                 console.log("GOOGLE LOGIN RESPONSE:", res.data);
 
-                login(token, user); // ✅ use backend's user directly
+                login(user); // ✅ Pass only user
                 navigate("/dashboard");
               } catch (e: any) {
                 alert(e.response?.data?.message || "Google sign-in failed");

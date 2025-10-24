@@ -1,6 +1,6 @@
 // import express, { Router } from "express";
 import upload from "../config/upload"; // no .js
-
+import { userLogout } from "../controllers/userController";
 import {
   googleSignIn,
   updateUser,
@@ -23,6 +23,8 @@ import { Router } from "express";
 import { searchAI } from "../controllers/searchAIController";
 
 const userRouter = Router();
+
+userRouter.post("/logout", userLogout);
 
 // token-Verification
 userRouter.get("/verify-token", userMiddleware, verifyToken);

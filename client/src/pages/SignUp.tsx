@@ -10,7 +10,7 @@ import { GoogleLogin } from "@react-oauth/google";
 export const Signup = () => {
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
-  const { login } = useContext(AuthContext);
+  const { login } = useContext(AuthContext); // Get the new login function
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -30,11 +30,14 @@ export const Signup = () => {
         password,
       });
 
-      if (res.data.token) {
-        login(res.data.token, res.data.user);
+      // --- FIX HERE ---
+      // Check for the user object, not the token
+      if (res.data.user) {
+        // Pass only the user object to login
+        login(res.data.user);
         navigate("/dashboard");
       } else {
-        alert("Signup successful, but no token returned.");
+        alert("Signup successful, but no user data returned.");
       }
     } catch (err: any) {
       alert(err.response?.data?.message || "Signup failed");
@@ -59,7 +62,7 @@ export const Signup = () => {
           />
         </div>
 
-        {/* Google sign-up */}
+        {/* Google sign-up (This part also had the error) */}
         <div className="flex justify-center pt-2">
           <GoogleLogin
             onSuccess={async (cred) => {
@@ -71,15 +74,16 @@ export const Signup = () => {
                   }
                 );
 
-                const { token, user } = res.data;
+                // --- FIX HERE ---
+                const { user } = res.data; // Only get user, not token
 
-                if (!token || !user) {
+                if (!user) {
                   alert("Google sign-in failed: Invalid response");
                   return;
                 }
                 console.log("GOOGLE LOGIN RESPONSE:", res.data);
 
-                login(token, user); // ✅ use backend's user directly
+                login(user); // ✅ Pass only user
                 navigate("/dashboard");
               } catch (e: any) {
                 alert(e.response?.data?.message || "Google sign-in failed");

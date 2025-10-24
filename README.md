@@ -1,248 +1,245 @@
+<<<<<<< HEAD
 # 🧠 Second2ndBrain -> RAG based AI-Powered Content Retrieval and Sharing App
+=======
+<div align="center">
+  <h1>🧠 Sec2ndBrain</h1>
+  <p><b>Your personal, AI-powered RAG knowledge base.</b><br/>
+  <i>(Built with Next.js, Pinecone, Jina AI, and LLaMA 3.1)</i></p>
+>>>>>>> f1cae3f (final amends)
 
-## 📘 Overview
-
-This project is a **personal AI-based content management and retrieval platform** built with **TypeScript** and **Next.js**, powered by **Jina AI embeddings**, **Pinecone vector search**, and **Groq/LLaMA 3.1** for intelligent query optimization.
-
-Users can log in, add various types of content (text, YouTube links, Twitter posts), and perform **semantic searches** over their personal data. Each search uses **RAG (Retrieval-Augmented Generation)** to fetch relevant information and generate contextual responses.
-
----
-
-## 🧩 Key Features
-
-| Feature                  | Description                                                                                      |
-| ------------------------ | ------------------------------------------------------------------------------------------------ |
-| **Authentication (JWT)** | Secure login, signup, and logout system using JSON Web Tokens.                                   |
-| **Content Management**   | Users can add, update, and delete notes, YouTube links, or Twitter links.                        |
-| **Profile Management**   | Users upload profile photos via **Cloudinary**.                                                  |
-| **AI Search System**     | RAG-based search using **Jina AI embeddings**, **Pinecone**, and **Groq/LLaMA 3.1**.             |
-| **Optimized Querying**   | LLaMA refines user queries before vector search to improve accuracy.                             |
-| **Semantic Retrieval**   | Pinecone index retrieves top matching results based on context similarity.                       |
-| **Profile Sharing**      | Users can share their profiles through a secure link, visible only to logged-in users.           |
-| **Access Revocation**    | Shared profile links can be revoked by the creator at any time, immediately invalidating access. |
-| **TypeScript Safety**    | End-to-end TypeScript ensures scalability, type safety, and maintainability.                     |
+  <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Pinecone-0B7D60?style=for-the-badge&logo=pinecone&logoColor=white" alt="Pinecone" />
+  <img src="https://img.shields.io/badge/Groq-FF5D00?style=for-the-badge&logo=groq&logoColor=white" alt="Groq" />
+  <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" />
+  <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="License: MIT" />
+</div>
 
 ---
 
-## 🏗️ Tech Stack
+## 🚀 Overview
 
-| Layer               | Technology                     |
-| ------------------- | ------------------------------ |
-| **Frontend**        | Next.js + TypeScript           |
-| **Backend**         | Node.js + Express (TypeScript) |
-| **Database**        | MongoDB (NoSQL)                |
-| **Authentication**  | JWT (JSON Web Tokens)          |
-| **File Storage**    | Cloudinary                     |
-| **Vector Database** | Pinecone                       |
-| **Embeddings**      | Jina AI Text Embedding API     |
-| **LLM**             | LLaMA 3.1 via Groq API         |
-| **Deployment**      | Vercel / Render / AWS          |
+**Sec2ndBrain** isn't just a note-taking app — it's an **intelligent retrieval-augmented generation (RAG)** platform for your personal data.
+It allows you to **save notes, YouTube videos, and Twitter posts**, and then **chat with your knowledge base**.
 
----
+It uses:
 
-## 🔐 Authentication Flow
+- **Jina AI** → Create high-fidelity embeddings
+- **Pinecone** → High-speed vector search
+- **Groq (via LLaMA 3.1)** → Query optimization & human-like response generation
 
-1. **User Registration/Login**
+This end-to-end **TypeScript** project demonstrates a scalable, modern AI stack.
 
-   * Credentials are submitted via the frontend.
-   * JWT is generated upon successful authentication.
-   * Token is stored securely on the client (HTTP-only cookie or local storage).
-
-2. **Token Validation**
-
-   * Protected routes require a valid JWT.
-   * Middleware checks the token before accessing protected resources.
+> 💡 _(Insert your app demo GIF below — essential for portfolio/showcases)_ > ![Sec2ndBrain Demo GIF](https://Vercel/demo.gif)
 
 ---
 
-## 🗂️ Data Flow & Architecture
+## ✨ Key Features
 
-### 1. User Adds Content
+- 🧠 **AI-Powered RAG Search:** Chat directly with your data. Fetches context from your personal content for accurate, sourced answers.
+- 🚀 **Query Optimization:** LLaMA 3.1 refines user queries before search (e.g., `"find js video"` → `"show videos related to JavaScript tutorials"`).
+- 💾 **Unified Content Management:** Manage notes, YouTube links, or Twitter posts — all in one place.
+- ☁️ **Cloud Media Storage:** Profile photo uploads & CDN delivery with Cloudinary.
+- 🔐 **Secure Auth & Sharing:**
 
-When a user adds content (text or link):
+  - JWT-based auth (httpOnly cookies)
+  - Shareable profile links
+  - Instant revocation
 
-```ts
-{
-  userId: string,
-  content: string,
-  type: 'text' | 'youtube' | 'twitter',
-  createdAt: Date
-}
-```
-
-* Content is stored in **MongoDB**.
-* Text content is embedded via **Jina AI**:
-
-  ```ts
-  const embedding = await jina.embedText(content);
-  ```
-* The resulting vector is saved in **Pinecone**, linked with metadata:
-
-  ```ts
-  pinecone.upsert({
-    id: contentId,
-    values: embedding,
-    metadata: { userId, content }
-  });
-  ```
+- 🛡️ **End-to-End Type Safety:** 100% TypeScript — scalable, maintainable, and reliable.
 
 ---
 
-### 2. Semantic Search (RAG Process)
+## 🌇 System Architecture & Tech Stack
 
-1. **User Query → LLaMA 3.1 (Groq)**
+| Layer              | Technology             | Purpose                                     |
+| ------------------ | ---------------------- | ------------------------------------------- |
+| **Frontend**       | Next.js + TypeScript   | Client-side rendering, routing, and UI      |
+| **Backend**        | Node.js + Express      | REST API, business logic, and orchestration |
+| **Database**       | MongoDB                | Store user and content data                 |
+| **Authentication** | JWT (httpOnly Cookies) | Secure, stateless auth                      |
+| **File Storage**   | Cloudinary             | Profile photo uploads & CDN                 |
+| **Vector DB**      | Pinecone               | Store and query text embeddings             |
+| **Embeddings**     | Jina AI                | Generate semantic embeddings                |
+| **LLM**            | LLaMA 3.1 (Groq)       | Query optimization and response generation  |
 
-   * LLaMA refines or rephrases the query.
-   * Example: `"find javascript video" → "show videos related to JavaScript tutorials"`
+---
 
-2. **Vector Search (Pinecone)**
+## 🔀 RAG & Data Flow
 
-   * Jina AI converts the refined query into a vector.
-   * Pinecone searches the user’s namespace for similar embeddings.
+```mermaid
+flowchart TD
+    subgraph Ingestion Flow
+        A[User Adds Content] --> B[Express API];
+        B --> C[Save to MongoDB];
+        B --> D[Jina AI API] -- Embedding --> E[Pinecone DB];
+    end
 
-3. **Contextual Answer Generation**
-
-   * Top results from Pinecone are merged into a context string.
-   * LLaMA generates a natural-language response using that context.
-
-```ts
-const context = results.matches.map(r => r.metadata.content).join("\n");
-const aiResponse = await llama.generate(`Answer using context:\n${context}\nUser query: ${searchQuery}`);
+    subgraph RAG Search Flow
+        F[User Queries] --> G[Next.js App];
+        G --> H[Express API];
+        H -- 1. Optimize --> I[Groq/LLaMA 3.1];
+        I -- 2. Embed --> D;
+        D -- 3. Vector Search --> E;
+        E -- 4. Get Context --> H;
+        H -- 5. Generate Answer --> I;
+        I -- 6. AI Response --> G;
+    end
 ```
 
 ---
 
-## 🔍 Pinecone Indexing & Namespaces
+## ⚙️ How It Works: The RAG Pipeline
 
-Each user’s data is isolated in Pinecone under their **namespace = userId**.
+### 1. Content Ingestion & Embedding
 
-### Create Index
+When a user adds content, it's processed in two parallel paths:
+
+- **MongoDB:** Raw text/link saved as primary record
+- **Pinecone:** Embedded using Jina AI → stored under the user’s namespace
 
 ```ts
-const index = pinecone.Index('user-content');
-await index.upsert({
+// 1. Store in MongoDB
+const content = await Content.create({ userId, text: "..." });
+
+// 2. Embed with Jina
+const embedding = await jina.embedText(content.text);
+
+// 3. Upsert vector into user's namespace
+await pinecone.upsert({
   namespace: userId,
-  vectors: [{ id: contentId, values: embedding, metadata }]
+  vectors: [
+    {
+      id: content._id,
+      values: embedding,
+      metadata: { text: content.text, type: content.type },
+    },
+  ],
 });
 ```
 
-### Query Index
+---
+
+### 2. Semantic Search (RAG)
+
+The RAG process unfolds as:
+
+1. **Optimize Query** → LLaMA 3.1 rephrases search
+2. **Embed Query** → Jina AI converts to vector
+3. **Retrieve Context** → Pinecone finds top-K matches
+4. **Generate Answer** → LLaMA 3.1 synthesizes final output
 
 ```ts
-const queryEmbedding = await jina.embedText(searchQuery);
+// 1. Optimize query
+const optimizedQuery = await groq.optimize(searchQuery);
+
+// 2. Embed query
+const queryEmbedding = await jina.embedText(optimizedQuery);
+
+// 3. Retrieve context
 const results = await pinecone.query({
   namespace: userId,
   vector: queryEmbedding,
   topK: 5,
   includeMetadata: true,
 });
+
+// 4. Generate answer
+const context = results.matches.map((r) => r.metadata.text).join("\n");
+const aiResponse = await groq.generate(
+  `Using this context:\n${context}\n\nAnswer the user's question: ${searchQuery}`
+);
 ```
 
 ---
 
-## 👥 Profile Sharing System
+## 🚀 Getting Started
 
-### 1. Profile Link Generation
+Follow these steps to set up the project locally.
 
-* Each user can generate a **shareable link** to their profile, e.g.:
-  `https://app.com/profile/<userId>?token=<uniqueShareToken>`
-* The share token is stored in MongoDB with an expiry or revocation field.
+### **Prerequisites**
 
-### 2. Controlled Access
-
-* Any **signed-in** user can open a shared profile link.
-* Middleware checks:
-
-  * Valid JWT
-  * Valid, active share token
-
-### 3. Revoking Access
-
-* The profile owner can revoke the link, updating the token’s `isActive = false` in MongoDB.
-* Once revoked, the link becomes invalid immediately.
+- Node.js (v18+)
+- MongoDB Atlas account
+- Pinecone account
+- Cloudinary account
+- API keys for Jina AI and Groq
 
 ---
 
-## ☁️ Cloudinary Integration
+### **Installation & Setup**
 
-Profile uploads are handled via **Cloudinary**:
+```bash
+# Clone the repository
+git clone https://github.com/your-username/sec2ndbrain.git
+cd sec2ndbrain
 
-```ts
-const result = await cloudinary.uploader.upload(filePath, {
-  folder: 'user_profiles',
-});
-await User.updateOne({ _id: userId }, { profileUrl: result.secure_url });
-```
+# Install root dependencies
+npm install
 
----
+# Install client dependencies
+cd client
+npm install
 
-## ⚙️ Environment Variables
-
-```
-MONGO_URI=
-JWT_SECRET=
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-PINECONE_API_KEY=
-JINA_API_KEY=
-GROQ_API_KEY=
+# Install server dependencies
+cd ../server
+npm install
 ```
 
 ---
 
-## 📁 Folder Structure
+### **Environment Variables**
 
-```
-src/
- ├── controllers/
- │    ├── authController.ts
- │    ├── contentController.ts
- │    ├── searchController.ts
- │    └── shareController.ts
- ├── services/
- │    ├── jinaService.ts
- │    ├── pineconeService.ts
- │    ├── groqService.ts
- │    └── cloudinaryService.ts
- ├── middleware/
- │    └── authMiddleware.ts
- │    └── shareAccessMiddleware.ts
- ├── models/
- │    ├── user.ts
- │    ├── content.ts
- │    └── shareToken.ts
- ├── routes/
- │    ├── authRoutes.ts
- │    ├── contentRoutes.ts
- │    ├── searchRoutes.ts
- │    └── shareRoutes.ts
- ├── utils/
- │    └── jwt.ts
- │    └── responseHandler.ts
- └── index.ts
+Create a `.env` file inside `/server` and fill in values based on `.env.example`:
+
+```bash
+# MongoDB
+MONGO_URI=your_mongodb_connection_string
+
+# Authentication
+JWT_SECRET=your_super_secret_jwt_key
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# AI Services
+PINECONE_API_KEY=your_pinecone_key
+JINA_API_KEY=your_jina_api_key
+GROQ_API_KEY=your_groq_api_key
 ```
 
 ---
 
-## 🚀 Future Enhancements
+### **Run the Application**
 
-* Role-based permissions (Admin/User)
-* Multi-modal embeddings (text + image)
-* Auto-summarization of added content
-* Chat-like query interface
-* Real-time revocation alerts
-* Analytics dashboard (content engagement, query history)
+```bash
+# Start backend (from /server)
+npm run dev
+
+# Start frontend (from /client)
+npm run dev
+```
+
+---
+
+## 🔮 Future Roadmap
+
+- [ ] **Multi-modal Embeddings:** Add support for images (screenshots, diagrams, etc.)
+- [ ] **Chat Interface:** Transform search bar into persistent chat
+- [ ] **Auto-Summarization:** Summarize long texts or YouTube videos
+- [ ] **Content Analytics:** Dashboard for most-searched or top topics
+- [ ] **Team Workspaces:** Shared Pinecone namespaces for collaboration
+
+---
+
+## 💡 Author
+
+**Developed by:** [Prateek Singh](https://github.com/PRAteek-singHWY)
 
 ---
 
 ## 🧾 License
 
 This project is licensed under the **MIT License**.
-
----
-
-## 💡 Author
-
-**Developed by:** Prateek Singh
-**Tech Stack:** TypeScript | Next.js | MongoDB | Pinecone | Groq | Jina AI | Cloudinary

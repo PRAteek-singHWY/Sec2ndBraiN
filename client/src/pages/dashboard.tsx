@@ -1,21 +1,19 @@
 import { useEffect, useState } from "react";
-
-import { PlusIcon } from "../assets/icons/PlusIcon";
-
-import { ShareIcon } from "../assets/icons/ShareIcon";
-
-import { Button } from "../components/Button";
-
-import { Card } from "../components/Card";
-
-import { CreateContentModal } from "../components/CreateContentModal";
-
-import { SideBar } from "../components/SideBar";
-
-import { HamIcon } from "../assets/icons/HamIcon";
-
 import { useNavigate } from "react-router-dom";
 
+// --- Icons ---
+import { PlusIcon } from "../assets/icons/PlusIcon";
+import { ShareIcon } from "../assets/icons/ShareIcon";
+import { HamIcon } from "../assets/icons/HamIcon";
+import { Logo } from "../assets/icons/Logo";
+
+// --- Components ---
+import { Button } from "../components/Button";
+import { Card } from "../components/Card";
+import { CreateContentModal } from "../components/CreateContentModal";
+import { SideBar } from "../components/SideBar"; // <-- This is our updated sidebar
+
+// --- API ---
 import {
   getContents,
   addContent,
@@ -30,8 +28,6 @@ import { userShareProfile } from "../api/content"; // add API
 import { AIQueryBar } from "../components/AIQueryBar";
 
 import console from "console";
-
-import { Logo } from "../assets/icons/Logo";
 
 import { FullscreenSearch } from "../components/FullscreenSearch";
 
@@ -98,6 +94,7 @@ function Dashboard() {
 
       alert("Profile sharing disabled");
     } catch (e) {
+      console.log(e)
       alert("Could not disable sharing");
     }
   };

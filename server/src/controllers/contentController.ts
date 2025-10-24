@@ -77,13 +77,6 @@ export const userAddContent = async (
       parsed.data.note || ""
     }\n\n${extractedContent}`;
 
-
-
-
-
-
-
-
     // 5) Store embedding
     try {
       await storeEmbeddingForDoc(content._id.toString(), embedText, {
@@ -92,6 +85,7 @@ export const userAddContent = async (
         type: parsed.data.type,
         link: parsed.data.link, // This lets you show the source link in search results
         userId: req.userId,
+        docId: content._id.toString(),
       });
     } catch (err) {
       console.error("⚠️ Failed to store embedding:", err);
@@ -109,10 +103,6 @@ export const userAddContent = async (
     return res.status(500).json({ error: "Internal Server error" });
   }
 };
-
-
-
-
 
 // --- GET CONTENT ---
 export const userGetContent = async (
@@ -181,7 +171,14 @@ const contentUpdateSchema = z.object({
   contentId: z.string().min(1),
   title: z.string().min(1).optional(),
   link: z.string().min(1).optional(),
+  note: z.string().optional(),
 });
+
+// Stale Embeddings:
+
+// Problem: When a user updates a title or note, the text in your MongoDB changes, but the old vector in Pinecone is not updated. Your AI search will return results based on the old, stale text.
+
+// The Fix: In userUpdateContent, after saving the content, you must re-calculate the embedText and call storeEmbeddingForDoc again to overwrite the old vector.
 
 export const userUpdateContent = async (
   req: AuthenticatedRequest,
@@ -191,7 +188,7 @@ export const userUpdateContent = async (
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.format() });
   }
-  const { contentId, title, link } = parsed.data;
+  const { contentId, title, link, note } = parsed.data;
   const userId = req.userId;
   try {
     const content = await Content.findOne({
@@ -201,9 +198,59 @@ export const userUpdateContent = async (
     if (!content) {
       return res.status(404).json({ error: "Content not found" });
     }
-    if (title !== undefined) content.title = title;
-    if (link !== undefined) content.link = link;
+    // 2. Track if embeddable content changed
+    let needsReEmbedding = false;
+    if (title !== undefined && content.title !== title) {
+      content.title = title;
+      needsReEmbedding = true;
+    }
+    if (link !== undefined && content.link !== link) {
+      content.link = link;
+      needsReEmbedding = true;
+    }
+    if (note !== undefined && content.note !== note) {
+      content.note = note;
+      needsReEmbedding = true;
+    }
     await content.save();
+
+    // 4. =================== NEW EMBEDDING LOGIC ===================
+    // If any text field changed, update the vector in Pinecone
+    if (needsReEmbedding) {
+      console.log(`🔄 Updating embeddings for content: ${content._id}`);
+      try {
+        // Re-extract content from the (potentially new) link
+        const extractedContent = await extractContentFromLink(
+          content.type,
+          content.link || undefined
+        );
+
+        // Re-build the text for embedding using the *updated* data
+        const embedText = `${content.title}\n\n${
+          content.note || ""
+        }\n\n${extractedContent}`;
+
+        // Call storeEmbeddingForDoc to overwrite the old vector
+        await storeEmbeddingForDoc(content._id.toString(), embedText, {
+          title: content.title,
+          type: content.type,
+          link: content.link,
+          userId: req.userId,
+          docId: content._id.toString(),
+        });
+
+        console.log(`✅ Embeddings updated for: ${content._id}`);
+      } catch (embedError) {
+        // Log the error, but don't fail the entire request.
+        // The Mongo save already succeeded.
+        console.error(
+          `⚠️ Failed to update embedding for ${content._id}:`,
+          embedError
+        );
+      }
+    }
+    // =============================================================
+
     return res.status(200).json({
       message: "Content Updated Successfully",
       updateContent: content,

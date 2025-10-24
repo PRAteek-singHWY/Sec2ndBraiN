@@ -1,5 +1,6 @@
 import { createContext } from "react";
 
+// UserProfile interface is perfect, no changes needed.
 export interface UserProfile {
   username: string | null;
   email?: string | null;
@@ -10,21 +11,20 @@ export interface UserProfile {
   bio?: string | null;
 }
 
+// --- THIS IS THE UPDATED PART ---
 interface AuthContextType {
   isAuthenticated: boolean;
-  token: string | null;
   user: UserProfile | null;
-
   setUser: React.Dispatch<React.SetStateAction<UserProfile | null>>;
-  login: (token: string, user?: UserProfile) => void;
+  // Login no longer receives a token, just the user
+  login: (user: UserProfile) => void; 
   logout: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
-  token: null,
   user: null,
   setUser: () => {},
-  login: () => {},
+  login: () => {}, // Updated default
   logout: () => {},
 });

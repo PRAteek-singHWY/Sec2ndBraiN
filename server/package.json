@@ -23,9 +23,16 @@
     "@llamaindex/google": "^0.3.22",
     "@llamaindex/pinecone": "^0.1.22",
     "@pinecone-database/pinecone": "^6.1.2",
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^24.3.1",
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
     "cloudinary": "^1.41.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
@@ -42,13 +49,9 @@
     "twitter-api-v2": "^1.27.0",
     "typescript": "^5.9.2",
     "youtube-transcript": "^1.2.1",
-    "zod": "^4.0.5",
-    "@types/bcrypt": "^6.0.0",
-    "@types/express": "^5.0.3",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/multer": "^2.0.0",
-    "@types/node": "^24.3.1",
-    "@types/cors": "^2.8.19"
+    "zod": "^4.0.5"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.10"
+  }
 }
