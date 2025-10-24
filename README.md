@@ -1,11 +1,11 @@
-<<<<<<< HEAD
+
 # 🧠 Second2ndBrain -> RAG based AI-Powered Content Retrieval and Sharing App
 =======
 <div align="center">
   <h1>🧠 Sec2ndBrain</h1>
   <p><b>Your personal, AI-powered RAG knowledge base.</b><br/>
   <i>(Built with Next.js, Pinecone, Jina AI, and LLaMA 3.1)</i></p>
->>>>>>> f1cae3f (final amends)
+ (final amends)
 
   <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js" />
   <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
