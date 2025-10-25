@@ -12,11 +12,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const allowedOrigin = process.env.CLIENT_URL || "http://localhost:5173";
+
 // Middleware
 app.use(
   cors({
-    origin: "http://localhost:5173", // Your React app's origin
-    credentials: true, // Allow cookies to be sent
+    origin: allowedOrigin,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Explicitly allow methods
+    allowedHeaders: ["Content-Type", "Authorization"], // Explicitly allow headers
+    credentials: true, // If you need cookies/sessions
   })
 );
 app.use(express.json());
