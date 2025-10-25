@@ -96,8 +96,8 @@ export const userSignUp = async (
     // Example in your backend login/signup controller
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax", // <-- Fix: Use lowercase 'l'
+      secure: true,
+      sameSite: "none", // <-- Fix: Use lowercase 'l'
       expires: new Date(Date.now() + 60 * 60 * 1000),
       path: "/",
     });
@@ -173,11 +173,17 @@ export const userSignIn = async (
     // });
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax", // <-- Fix: Use lowercase 'l'
+      secure: true,
+      sameSite: "none", // <-- Fix: Use lowercase 'l'
       expires: new Date(Date.now() + 60 * 60 * 1000),
       path: "/",
     });
+
+
+
+
+
+
     return res.status(200).json({
       message: "Signed in Successfully",
       user: {
@@ -240,8 +246,8 @@ export const googleSignIn = async (req: Request, res: Response) => {
     // 1. SET THE COOKIE
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax", // <-- Fix: Use lowercase 'l'
+      secure: true,
+      sameSite: "none", // <-- Fix: Use lowercase 'l'
       expires: new Date(Date.now() + 60 * 60 * 1000),
       path: "/",
     });
@@ -267,8 +273,8 @@ export const userLogout = (req: Request, res: Response) => {
   // This tells the browser to delete the cookie
   res.clearCookie("token", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: true,
+    sameSite: "none",
     path: "/", // Make sure to specify the path
   });
 

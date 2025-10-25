@@ -12,15 +12,24 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const allowedOrigin = process.env.CLIENT_URL || "http://localhost:5173";
+const deployedOrigin = process.env.CLIENT_URL; // e.g., 'https://sec2ndbrain-1.onrender.com'
+const localOrigin = "http://localhost:5173";
+
+const allowedOrigins = [deployedOrigin, localOrigin].filter(Boolean); // Filter out undefined if CLIENT_URL isn't set
 
 // Middleware
 app.use(
   cors({
-    origin: allowedOrigin,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Explicitly allow methods
-    allowedHeaders: ["Content-Type", "Authorization"], // Explicitly allow headers
-    credentials: true, // If you need cookies/sessions
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests) OR if origin is in allowedOrigins
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    // ... other options
   })
 );
 app.use(express.json());
