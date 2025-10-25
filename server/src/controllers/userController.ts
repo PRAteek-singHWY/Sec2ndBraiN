@@ -92,11 +92,13 @@ export const userSignUp = async (
     });
 
     // 1. SET THE COOKIE
+    // Example in your backend login/signup controller
+    // Example in your backend login/signup controller
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 60 * 60 * 1000, // 1 hour
+      sameSite: "lax", // <-- Fix: Use lowercase 'l'
+      expires: new Date(Date.now() + 60 * 60 * 1000),
       path: "/",
     });
 
@@ -162,14 +164,20 @@ export const userSignIn = async (
 
     // ELIMINATING LOCALSTORAGE
     // 1. SET THE COOKIE
+    // res.cookie("token", token, {
+    //   httpOnly: true, // Cannot be accessed by client-side JS
+    //   secure: process.env.NODE_ENV === "production", // Only send over HTTPS
+    //   sameSite: "strict", // Best CSRF protection
+    //   maxAge: 60 * 60 * 1000, // 1 hour in milliseconds (to match 'expiresIn')
+    //   path: "/",
+    // });
     res.cookie("token", token, {
-      httpOnly: true, // Cannot be accessed by client-side JS
-      secure: process.env.NODE_ENV === "production", // Only send over HTTPS
-      sameSite: "strict", // Best CSRF protection
-      maxAge: 60 * 60 * 1000, // 1 hour in milliseconds (to match 'expiresIn')
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax", // <-- Fix: Use lowercase 'l'
+      expires: new Date(Date.now() + 60 * 60 * 1000),
       path: "/",
     });
-
     return res.status(200).json({
       message: "Signed in Successfully",
       user: {
@@ -233,8 +241,8 @@ export const googleSignIn = async (req: Request, res: Response) => {
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 60 * 60 * 1000, // 1 hour
+      sameSite: "lax", // <-- Fix: Use lowercase 'l'
+      expires: new Date(Date.now() + 60 * 60 * 1000),
       path: "/",
     });
 
@@ -260,7 +268,7 @@ export const userLogout = (req: Request, res: Response) => {
   res.clearCookie("token", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "lax",
     path: "/", // Make sure to specify the path
   });
 
