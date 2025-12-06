@@ -36,7 +36,8 @@ app.use(cookieParser());
 
 // 3. FIX: Google Login & Security Headers
 // This solves the "Cross-Origin-Opener-Policy policy would block..." error
-app.use((req: Request, res: Response, next: NextFunction) => {
+// server/src/index.ts
+app.use((req, res, next) => {
   res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
   res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
   next();
