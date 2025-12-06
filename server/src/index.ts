@@ -29,7 +29,7 @@ app.use(
     credentials: true,
   })
 );
-
+app.use(cookieParser());
 // 2. Body & Cookie Parsers
 app.use(express.json());
 app.use(cookieParser());

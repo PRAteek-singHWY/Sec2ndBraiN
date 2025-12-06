@@ -13,19 +13,18 @@ dotenv.config();
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
+// ✅ 1. GLOBAL HELPER: Determine Environment
+// This is the key fix. It switches settings based on where the code is running.
+const isProduction = process.env.NODE_ENV === "production";
+
+interface AuthenticatedRequest extends Request {
+  userId?: string;
+  file?: Express.Multer.File;
+}
+
+// ------------------------------------------------------------------
+// VERIFY TOKEN
+// ------------------------------------------------------------------
 export const verifyToken = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const user = await User.findById(req.userId).select("-password");
@@ -38,7 +37,9 @@ export const verifyToken = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
-// -------- Local Sign Up --------
+// ------------------------------------------------------------------
+// SIGN UP
+// ------------------------------------------------------------------
 const userSignupSchema = z.object({
   username: z
     .string()
@@ -53,10 +54,7 @@ const userSignupSchema = z.object({
     .regex(/[0-9]/, { message: "Must include a number" })
     .regex(/[^A-Za-z0-9]/, { message: "Must include a special character" }),
 });
-interface AuthenticatedRequest extends Request {
-  userId?: string;
-  file?: Express.Multer.File;
-}
+
 type userSignUpType = z.infer<typeof userSignupSchema>;
 
 export const userSignUp = async (
@@ -91,14 +89,12 @@ export const userSignUp = async (
       expiresIn: "1h",
     });
 
-    // 1. SET THE COOKIE
-    // Example in your backend login/signup controller
-    // Example in your backend login/signup controller
+    // ✅ FIX: Dynamic Cookie Settings
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none", // <-- Fix: Use lowercase 'l'
-      expires: new Date(Date.now() + 60 * 60 * 1000),
+      secure: isProduction, // False on Localhost, True on Render
+      sameSite: isProduction ? "none" : "lax", // Lax allows login on localhost
+      expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
       path: "/",
     });
 
@@ -117,7 +113,9 @@ export const userSignUp = async (
   }
 };
 
-// -------- Local Sign In --------
+// ------------------------------------------------------------------
+// SIGN IN
+// ------------------------------------------------------------------
 const userSigninSchema = z.object({
   username: z.string().min(3, { message: "Username is required" }),
   password: z.string().min(1, { message: "Password is required" }),
@@ -162,27 +160,14 @@ export const userSignIn = async (
       expiresIn: "1h",
     });
 
-    // ELIMINATING LOCALSTORAGE
-    // 1. SET THE COOKIE
-    // res.cookie("token", token, {
-    //   httpOnly: true, // Cannot be accessed by client-side JS
-    //   secure: process.env.NODE_ENV === "production", // Only send over HTTPS
-    //   sameSite: "strict", // Best CSRF protection
-    //   maxAge: 60 * 60 * 1000, // 1 hour in milliseconds (to match 'expiresIn')
-    //   path: "/",
-    // });
+    // ✅ FIX: Dynamic Cookie Settings
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none", // <-- Fix: Use lowercase 'l'
+      secure: isProduction, // False on Localhost, True on Render
+      sameSite: isProduction ? "none" : "lax",
       expires: new Date(Date.now() + 60 * 60 * 1000),
       path: "/",
     });
-
-
-
-
-
 
     return res.status(200).json({
       message: "Signed in Successfully",
@@ -198,8 +183,9 @@ export const userSignIn = async (
   }
 };
 
-// -------- Google Sign In --------
-// -------- Google Sign In --------
+// ------------------------------------------------------------------
+// GOOGLE SIGN IN
+// ------------------------------------------------------------------
 export const googleSignIn = async (req: Request, res: Response) => {
   const idToken = req.body.idToken as string;
   if (!idToken) return res.status(400).json({ message: "idToken missing" });
@@ -213,28 +199,23 @@ export const googleSignIn = async (req: Request, res: Response) => {
 
     const email = payload?.email?.toLowerCase();
     const name = payload?.name || "";
-    const picture = payload?.picture; // ✅ capture Google photo
+    const picture = payload?.picture;
 
     if (!email) return res.status(400).json({ message: "No email found" });
 
     let user = await User.findOne({ email });
     if (!user) {
-      // ✅ New Google user
       user = await User.create({
         email,
         username: email,
         name: payload?.name || "",
-        profilePic: payload?.picture || null, // save google photo if available
+        profilePic: payload?.picture || null,
       });
     } else {
-      // ✅ Existing user
       if (!user.name) user.name = payload?.name || "";
-
-      // If user never uploaded custom pic, refresh with Google’s
       if (!user.profilePic && picture) {
         user.profilePic = picture;
       }
-
       await user.save();
     }
 
@@ -243,11 +224,11 @@ export const googleSignIn = async (req: Request, res: Response) => {
       expiresIn: "1h",
     });
 
-    // 1. SET THE COOKIE
+    // ✅ FIX: Dynamic Cookie Settings
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none", // <-- Fix: Use lowercase 'l'
+      secure: isProduction, // False on Localhost
+      sameSite: isProduction ? "none" : "lax",
       expires: new Date(Date.now() + 60 * 60 * 1000),
       path: "/",
     });
@@ -267,20 +248,24 @@ export const googleSignIn = async (req: Request, res: Response) => {
   }
 };
 
-// In userController.ts
-
+// ------------------------------------------------------------------
+// LOGOUT
+// ------------------------------------------------------------------
 export const userLogout = (req: Request, res: Response) => {
-  // This tells the browser to delete the cookie
+  // ✅ FIX: Clear with same settings
   res.clearCookie("token", {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
-    path: "/", // Make sure to specify the path
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    path: "/",
   });
 
   return res.status(200).json({ message: "Logged out successfully" });
 };
 
+// ------------------------------------------------------------------
+// UPDATE USER
+// ------------------------------------------------------------------
 export const updateUser = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.userId;
@@ -288,7 +273,6 @@ export const updateUser = async (req: AuthenticatedRequest, res: Response) => {
 
     const updateData: any = { name, phone, bio };
 
-    // Remove any profilePic logic completely
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
       new: true,
     }).select("-password");
@@ -303,11 +287,9 @@ export const updateUser = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
-interface AuthenticatedRequest extends Request {
-  userId?: string;
-  file?: Express.Multer.File;
-}
-
+// ------------------------------------------------------------------
+// UPLOAD PROFILE PHOTO
+// ------------------------------------------------------------------
 export const uploadProfilePhoto = async (
   req: AuthenticatedRequest,
   res: Response
