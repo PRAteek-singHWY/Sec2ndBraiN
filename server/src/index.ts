@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -16,7 +16,7 @@ const localOrigin = "http://localhost:5173";
 
 const allowedOrigins = [deployedOrigin, localOrigin].filter(Boolean);
 
-// Middleware
+// 1. CORS Middleware
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -29,24 +29,35 @@ app.use(
     credentials: true,
   })
 );
+
+// 2. Body & Cookie Parsers
 app.use(express.json());
 app.use(cookieParser());
 
-// Routes
+// 3. FIX: Google Login & Security Headers
+// This solves the "Cross-Origin-Opener-Policy policy would block..." error
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+  next();
+});
+
+// 4. API Routes (MUST be before static files)
 app.use("/api/v1", userRouter);
 
 // ---------------------------------------------------------------------------
-//  FIX: SERVING FRONTEND
+//  SERVING FRONTEND (DEPLOYMENT FIX)
 // ---------------------------------------------------------------------------
 
 // Resolve path to the client build folder
+// Note: Ensure your Render Build Command builds the client first!
 const clientBuildPath = path.join(__dirname, "../../client/dist");
 
-// 1. Serve static files (JS, CSS, Images)
+// 5. Serve static files (JS, CSS, Images)
 app.use(express.static(clientBuildPath));
 
-// 2. THE FIX: Catch-All Route using Regex Object
-// Passing /.*/ directly (no quotes) avoids "PathError: Missing parameter name"
+// 6. Catch-All Route (SPA Support)
+// We use a Regex /.*/ to avoid the "Missing parameter name" crash in newer Express versions
 app.get(/.*/, (req: Request, res: Response) => {
   res.sendFile(path.join(clientBuildPath, "index.html"));
 });
