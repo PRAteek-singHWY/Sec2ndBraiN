@@ -28,9 +28,9 @@ const App = () => {
       <Route
         path="/profile/:shareLink"
         element={
-          <ProtectedRoute>
-            <SharedProfile />
-          </ProtectedRoute>
+          // <ProtectedRoute>
+          <SharedProfile />
+          // </ProtectedRoute>
         }
       />
 

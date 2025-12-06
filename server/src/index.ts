@@ -1,27 +1,25 @@
 import express, { Request, Response } from "express";
-import cookieParser from "cookie-parser"; // <-- Import
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import userRouter from "./routes/userRouter";
-import { string } from "zod";
-import { error } from "console";
+import path from "path";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const deployedOrigin = process.env.CLIENT_URL; // e.g., 'https://sec2ndbrain-1.onrender.com'
+const deployedOrigin = process.env.CLIENT_URL;
 const localOrigin = "http://localhost:5173";
 
-const allowedOrigins = [deployedOrigin, localOrigin].filter(Boolean); // Filter out undefined if CLIENT_URL isn't set
+const allowedOrigins = [deployedOrigin, localOrigin].filter(Boolean);
 
 // Middleware
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests) OR if origin is in allowedOrigins
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -29,25 +27,39 @@ app.use(
       }
     },
     credentials: true,
-    // ... other options
   })
 );
 app.use(express.json());
-app.use(cookieParser()); // <-- Use it here
+app.use(cookieParser());
+
 // Routes
 app.use("/api/v1", userRouter);
-app.get("/", (req: Request, res: Response) => {
-  res.send("Welcome to SECOND_BRAIN");
+
+// ---------------------------------------------------------------------------
+//  FIX: SERVING FRONTEND
+// ---------------------------------------------------------------------------
+
+// Resolve path to the client build folder
+const clientBuildPath = path.join(__dirname, "../../client/dist");
+
+// 1. Serve static files (JS, CSS, Images)
+app.use(express.static(clientBuildPath));
+
+// 2. THE FIX: Catch-All Route using Regex Object
+// Passing /.*/ directly (no quotes) avoids "PathError: Missing parameter name"
+app.get(/.*/, (req: Request, res: Response) => {
+  res.sendFile(path.join(clientBuildPath, "index.html"));
 });
 
-// Connect to MongoDB
+// ---------------------------------------------------------------------------
 
+// Connect to MongoDB
 mongoose
   .connect(process.env.MONGODB_CONNECTION_STRING as string)
   .then(() => {
     console.log("MongoDB connected");
     app.listen(PORT, () => {
-      console.log(`Server running on http:/localhost:${PORT}`);
+      console.log(`Server running on http://localhost:${PORT}`);
     });
   })
   .catch((error) => {
