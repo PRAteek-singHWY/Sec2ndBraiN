@@ -1,4 +1,11 @@
 
+# Example Profile in Sec2ndBrain
+
+
+![1775387650479](https://github.com/user-attachments/assets/b7d1f4b0-09b2-46a3-bcfb-b38c1302e485)
+
+
+
 # 🧠 Second2ndBrain -> RAG based AI-Powered Content Retrieval and Sharing App
 
 <div align="center">
